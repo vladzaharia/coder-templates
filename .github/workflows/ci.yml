@@ -5,6 +5,11 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      message:
+        description: 'Message to use for the template push, defaults to the commit message'
+        required: false
+        type: string
 
 jobs:
   get_params:
@@ -61,6 +66,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ needs.get_params.outputs.any_changed != 'false' }}
     strategy:
+      fail-fast: false
       matrix:
         template: ${{ fromJson(needs.get_params.outputs.changed_files) }}
     steps:
@@ -79,6 +85,6 @@ jobs:
             CODER_TEMPLATE_NAME: ${{ matrix.template }}
             CODER_TEMPLATE_VERSION: ${{ needs.get_params.outputs.sha_short }}
             CODER_TEMPLATE_DIR: ./${{ matrix.template }}
-            CODER_TEMPLATE_MESSAGE: ${{ needs.get_params.outputs.pr_title }}
+            CODER_TEMPLATE_MESSAGE: ${{ inputs.message || needs.get_params.outputs.pr_title }}
             VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
             VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
