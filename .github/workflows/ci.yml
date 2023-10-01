@@ -48,7 +48,7 @@ jobs:
           fi
 
           if [[ "${{github.event_name}}" == "workflow_dispatch" ]]; then
-            echo "changed_files=${{ fromJson(steps.changed-files-manual.outputs.folders) }}" >> $GITHUB_OUTPUT
+            echo "changed_files=${{ fromJson(steps.changed-files-manual.outputs.folders || '[]') }}" >> $GITHUB_OUTPUT
             echo "any_changed=true" >> $GITHUB_OUTPUT
           fi
 
