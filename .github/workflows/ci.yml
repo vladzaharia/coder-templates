@@ -1,0 +1,77 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  get_params:
+    name: Get deployment parameters
+    runs-on: ubuntu-latest
+    outputs:
+      sha_short: ${{ steps.vars.outputs.sha_short }}
+      pr_title: ${{ steps.message.outputs.pr_title }}
+      changed_files: ${{ steps.changed-files.outputs.changed_files }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Get short commit SHA
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+      - name: Get latest commit title
+        id: message
+        run: echo "pr_title=$(git log --format=%s -n 1 ${{ github.sha }})" >> $GITHUB_OUTPUT
+      - name: Get changed files (on push)
+        id: changed-files-push
+        uses: tj-actions/changed-files@v39
+        if: github.event_name == 'push'
+        with:
+          dir_names: true
+          dir_names_exclude_current_dir: true
+          files_ignore: |
+            .github/**/*
+            **/*.md
+      - name: Get changed files (manual)
+        id: changed-files-manual
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "folders=$(tree -J -d -L 1 | jq -c '.[0].contents | map(.name)')" >> $GITHUB_OUTPUT
+      - name: Get changed files
+        id: changed-files
+        run: |
+          if [[ "${{github.event_name}}" == "push"; then
+            echo "changed_files=${{ steps.changed-files-push.outputs.any_changed }}" >> $GITHUB_OUTPUT
+          fi
+
+          if [[ "${{github.event_name}}" == "workflow_dispatch"; then
+            echo "changed_files=${{ steps.changed-files-manual.outputs.folders }}" >> $GITHUB_OUTPUT
+          fi
+
+  deploy_template:
+    needs: get_params
+    name: Deploy templates
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        template: ${{ needs.get_params.outputs.changed_files }}
+    steps:
+      - name: Checkout files
+        uses: actions/checkout@v3
+      - name: Download latest Coder binary
+        run: |
+          curl -fsSL "https://dev.coder.com/bin/coder-linux-amd64" -o "./coder"
+          chmod +x "./coder"
+      - name: Push template
+        run: |
+            ./coder templates push $CODER_TEMPLATE_NAME --directory $CODER_TEMPLATE_DIR --yes --name=$CODER_TEMPLATE_VERSION --message="$CODER_TEMPLATE_MESSAGE" --variable vault_role_id="$VAULT_ROLE_ID" --variable vault_secret_id="$VAULT_SECRET_ID"
+        env:
+            CODER_URL: https://code.polaris.rest
+            CODER_SESSION_TOKEN: ${{ secrets.CODER_SESSION_TOKEN }}
+            CODER_TEMPLATE_NAME: ${{ matrix.template }}
+            CODER_TEMPLATE_VERSION: ${{ needs.get_params.outputs.sha_short }}
+            CODER_TEMPLATE_DIR: ./${{ matrix.template }}
+            CODER_TEMPLATE_MESSAGE: ${{ needs.get_params.outputs.pr_title }}
+            VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
+            VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
