@@ -14,6 +14,7 @@ jobs:
       sha_short: ${{ steps.vars.outputs.sha_short }}
       pr_title: ${{ steps.message.outputs.pr_title }}
       changed_files: ${{ steps.changed-files.outputs.changed_files }}
+      any_changed: ${{ steps.changed-files.outputs.any_changed }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -43,16 +44,19 @@ jobs:
         run: |
           if [[ "${{github.event_name}}" == "push" ]]; then
             echo "changed_files=${{ steps.changed-files-push.outputs.all_changed_files }}" >> $GITHUB_OUTPUT
+            echo "any_changed=${{ steps.changed-files-push.outputs.any_changed }}" >> $GITHUB_OUTPUT
           fi
 
           if [[ "${{github.event_name}}" == "workflow_dispatch" ]]; then
             echo "changed_files=${{ steps.changed-files-manual.outputs.folders }}" >> $GITHUB_OUTPUT
+            echo "any_changed=true" >> $GITHUB_OUTPUT
           fi
 
   deploy_template:
     needs: get_params
     name: Deploy templates
     runs-on: ubuntu-latest
+    if: ${{ needs.get_params.outputs.any_changed }}
     strategy:
       matrix:
         template: ${{ needs.get_params.outputs.changed_files }}
