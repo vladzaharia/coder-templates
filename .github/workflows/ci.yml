@@ -48,7 +48,7 @@ jobs:
           fi
 
           if [[ "${{github.event_name}}" == "workflow_dispatch" ]]; then
-            echo "changed_files=${{ fromJson(steps.changed-files-manual.outputs.folders || '[]') }}" >> $GITHUB_OUTPUT
+            echo "changed_files=${{ steps.changed-files-manual.outputs.folders }}" >> $GITHUB_OUTPUT
             echo "any_changed=true" >> $GITHUB_OUTPUT
           fi
 
@@ -59,7 +59,7 @@ jobs:
     if: ${{ needs.get_params.outputs.any_changed != 'false' }}
     strategy:
       matrix:
-        template: ${{ needs.get_params.outputs.changed_files }}
+        template: ${{ fromJson(needs.get_params.outputs.changed_files) }}
     steps:
       - name: Checkout files
         uses: actions/checkout@v3
