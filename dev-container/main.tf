@@ -9,7 +9,7 @@ terraform {
       version = "> 3.0.0, < 4.0.0"
     }
     vault = {
-      source = "hashicorp/vault"
+      source  = "hashicorp/vault"
       version = "> 3.20.0, < 4.0.0"
     }
   }
@@ -37,7 +37,7 @@ variable "vault_secret_id" {
 }
 
 provider "vault" {
-  address = "https://vault.polaris.rest"
+  address          = "https://vault.polaris.rest"
   skip_child_token = true
 
   auth_login {
@@ -52,23 +52,23 @@ provider "vault" {
 
 locals {
   username = data.coder_workspace.me.owner
-  size_mapping = { 
-     small = {
-        cores = "0"
-        memory = 1024
-      },
-     medium = {
-        cores = "0-1"
-        memory = 2048
-      },
-      large = {
-        cores = "0-3"
-        memory = 4096
-      },
-      xlarge = {
-        cores = "0-7"
-        memory = 8192
-      },
+  size_mapping = {
+    small = {
+      cores  = "0"
+      memory = 1024
+    },
+    medium = {
+      cores  = "0-1"
+      memory = 2048
+    },
+    large = {
+      cores  = "0-3"
+      memory = 4096
+    },
+    xlarge = {
+      cores  = "0-7"
+      memory = 8192
+    },
   }
 }
 
@@ -92,22 +92,22 @@ data "coder_parameter" "size" {
   mutable      = false
 
   option {
-    name = "Small (1c / 1024MB)"
+    name  = "Small (1c / 1024MB)"
     value = "small"
   }
 
   option {
-    name = "Medium (2c / 2048MB)"
+    name  = "Medium (2c / 2048MB)"
     value = "medium"
   }
 
   option {
-    name = "Large (4c / 4096MB)"
+    name  = "Large (4c / 4096MB)"
     value = "large"
   }
 
   option {
-    name = "XLarge (8c / 8192MB)"
+    name  = "XLarge (8c / 8192MB)"
     value = "xlarge"
   }
 }
@@ -122,63 +122,63 @@ data "coder_parameter" "base_image" {
   mutable     = false
 
   option {
-    name = "Ubuntu 23.10"
+    name  = "Ubuntu 23.10"
     value = "ubuntu:23.10"
-    icon = "https://raw.githubusercontent.com/docker-library/docs/2ac3caaf21dfba9734f20518971983edc617c77c/ubuntu/logo.png"
+    icon  = "https://raw.githubusercontent.com/docker-library/docs/2ac3caaf21dfba9734f20518971983edc617c77c/ubuntu/logo.png"
   }
 
   option {
-    name = "Ubuntu 22.04 LTS"
+    name  = "Ubuntu 22.04 LTS"
     value = "ubuntu:22.04"
-    icon = "https://raw.githubusercontent.com/docker-library/docs/2ac3caaf21dfba9734f20518971983edc617c77c/ubuntu/logo.png"
+    icon  = "https://raw.githubusercontent.com/docker-library/docs/2ac3caaf21dfba9734f20518971983edc617c77c/ubuntu/logo.png"
   }
 
   option {
-    name = "Debian Bookworm"
+    name  = "Debian Bookworm"
     value = "debian:bookworm"
-    icon = "${data.coder_workspace.me.access_url}/icon/debian.svg"
+    icon  = "${data.coder_workspace.me.access_url}/icon/debian.svg"
   }
 
   option {
-    name = "Golang"
+    name  = "Golang"
     value = "golang:bookworm"
-    icon = "https://go.dev/blog/go-brand/Go-Logo/PNG/Go-Logo_Blue.png"
+    icon  = "https://go.dev/blog/go-brand/Go-Logo/PNG/Go-Logo_Blue.png"
   }
 
   option {
-    name = "Node LTS"
+    name  = "Node LTS"
     value = "node:lts-bookworm"
-    icon = "https://seeklogo.com/images/N/nodejs-logo-FBE122E377-seeklogo.com.png"
+    icon  = "https://seeklogo.com/images/N/nodejs-logo-FBE122E377-seeklogo.com.png"
   }
 
   option {
-    name = "Node Current"
+    name  = "Node Current"
     value = "node:current-bookworm"
-    icon = "https://seeklogo.com/images/N/nodejs-logo-FBE122E377-seeklogo.com.png"
+    icon  = "https://seeklogo.com/images/N/nodejs-logo-FBE122E377-seeklogo.com.png"
   }
 
   option {
-    name = "OpenJDK 22"
+    name  = "OpenJDK 22"
     value = "openjdk:22-bookworm"
-    icon = "https://www.basis-europe.eu/wp-content/uploads/openjdk_Icon_logo.png"
+    icon  = "https://www.basis-europe.eu/wp-content/uploads/openjdk_Icon_logo.png"
   }
 
   option {
-    name = "PHP"
+    name  = "PHP"
     value = "php:bookworm"
-    icon = "https://www.svgrepo.com/show/452088/php.svg"
+    icon  = "https://www.svgrepo.com/show/452088/php.svg"
   }
 
   option {
-    name = "Python"
+    name  = "Python"
     value = "python:bookworm"
-    icon = "https://www.svgrepo.com/show/452091/python.svg"
+    icon  = "https://www.svgrepo.com/show/452091/python.svg"
   }
 
   option {
-    name = "Ruby"
+    name  = "Ruby"
     value = "ruby:bookworm"
-    icon = "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Ruby_logo.svg/1200px-Ruby_logo.svg.png"
+    icon  = "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Ruby_logo.svg/1200px-Ruby_logo.svg.png"
   }
 }
 
@@ -217,8 +217,8 @@ data "coder_parameter" "vault_project" {
   display_name = "Vault project name"
   description  = "Name of the project to retrieve and inject environment variables from"
   # icon        = "${data.coder_workspace.me.access_url}/icon/docker.png"
-  default      = ""
-  mutable      = false
+  default = ""
+  mutable = false
 }
 
 data "vault_generic_secret" "dotenv" {
@@ -247,34 +247,34 @@ resource "coder_agent" "main" {
     GIT_COMMITTER_NAME  = "${data.coder_workspace.me.owner}"
     GIT_AUTHOR_EMAIL    = "${data.coder_workspace.me.owner_email}"
     GIT_COMMITTER_EMAIL = "${data.coder_workspace.me.owner_email}"
-    "DOTFILES_URI" = data.coder_parameter.dotfiles_repo.value != "" ? data.coder_parameter.dotfiles_repo.value : null
+    "DOTFILES_URI"      = data.coder_parameter.dotfiles_repo.value != "" ? data.coder_parameter.dotfiles_repo.value : null
 
   }, data.vault_generic_secret.dotenv.data)
 
   metadata {
     display_name = "CPU Usage"
-    key  = "cpu"
+    key          = "cpu"
     # Uses the coder stat command to get container CPU usage.
-    script = "coder stat cpu"
+    script   = "coder stat cpu"
     interval = 1
-    timeout = 1
+    timeout  = 1
   }
 
   metadata {
     display_name = "Memory Usage"
-    key  = "mem"
+    key          = "mem"
     # Uses the coder stat command to get container memory usage in GiB.
-    script = "coder stat mem --prefix Gi"
+    script   = "coder stat mem --prefix Gi"
     interval = 1
-    timeout = 1
+    timeout  = 1
   }
 
   metadata {
     display_name = "Disk Usage"
-    key  = "disk"
-    script = "df -h | awk '$6 ~ /^\\/$/ { print $5 }'"
-    interval = 1
-    timeout = 1
+    key          = "disk"
+    script       = "df -h | awk '$6 ~ /^\\/$/ { print $5 }'"
+    interval     = 1
+    timeout      = 1
   }
 }
 
@@ -324,7 +324,7 @@ resource "docker_volume" "home_volume" {
 resource "coder_metadata" "home_volume" {
   resource_id = docker_volume.home_volume.id
   item {
-    key = "home"
+    key   = "home"
     value = "/home/${local.username}"
   }
 }
@@ -334,8 +334,8 @@ resource "docker_image" "main" {
   build {
     context = "./build"
     build_args = {
-      IMAGE = data.coder_parameter.custom_base_image.value != "" ? data.coder_parameter.custom_base_image.value : data.coder_parameter.base_image.value
-      USER = local.username
+      IMAGE       = data.coder_parameter.custom_base_image.value != "" ? data.coder_parameter.custom_base_image.value : data.coder_parameter.base_image.value
+      USER        = local.username
       ENABLE_DIND = "${data.coder_parameter.enable_dind.value}"
     }
   }
@@ -347,21 +347,21 @@ resource "docker_image" "main" {
 resource "coder_metadata" "main_image" {
   resource_id = docker_image.main.id
   item {
-    key = "base"
-    value = "${data.coder_parameter.base_image.value}"
+    key   = "base"
+    value = data.coder_parameter.base_image.value
   }
 }
 
 resource "docker_network" "dind_network" {
-  name = "network-${data.coder_workspace.me.id}"
+  name  = "network-${data.coder_workspace.me.id}"
   count = data.coder_parameter.enable_dind.value ? 1 : 0
 }
 
 resource "coder_metadata" "dind_network" {
   resource_id = docker_network.dind_network[0].id
   item {
-    key = "name"
-    value = "${docker_network.dind_network[0].name}"
+    key   = "name"
+    value = docker_network.dind_network[0].name
   }
   count = data.coder_parameter.enable_dind.value ? 1 : 0
 }
@@ -386,14 +386,14 @@ resource "docker_container" "workspace" {
   hostname = data.coder_workspace.me.name
   # Use the docker gateway if the access URL is 127.0.0.1
   entrypoint = ["sh", "-c", replace(coder_agent.main.init_script, "/localhost|127\\.0\\.0\\.1/", "host.docker.internal")]
-  env        = [
+  env = [
     "CODER_AGENT_TOKEN=${coder_agent.main.token}",
     "CODER_ENV=true",
     data.coder_parameter.enable_dind.value ? "DOCKER_HOST=${docker_container.dind[0].name}:2375" : "DOCKER_HOST="
   ]
 
   cpu_set = local.size_mapping[data.coder_parameter.size.value].cores
-  memory = local.size_mapping[data.coder_parameter.size.value].memory
+  memory  = local.size_mapping[data.coder_parameter.size.value].memory
 
   host {
     host = "host.docker.internal"
@@ -411,7 +411,7 @@ resource "docker_container" "workspace" {
       name = docker_network.dind_network[0].name
     }
   }
-  
+
   # Add labels in Docker to keep track of orphan resources.
   labels {
     label = "coder.owner"

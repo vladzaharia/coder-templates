@@ -1,29 +1,79 @@
 terraform {
   required_providers {
     coder = {
-      source = "coder/coder"
+      source  = "coder/coder"
       version = "> 0.7.0, < 1.0.0"
     }
     azurerm = {
-      source = "hashicorp/azurerm"
+      source  = "hashicorp/azurerm"
       version = "> 3.0.0, < 4.0.0"
+    }
+    vault = {
+      source  = "hashicorp/vault"
+      version = "> 3.20.0, < 4.0.0"
     }
   }
 }
 
-variable "client_secret" {
+variable "vault_role_id" {
   type        = string
-  description = "Client Secret to use for Azure connection"
+  description = "Role ID for Vault lookup"
+
+  validation {
+    condition     = length(var.vault_role_id) == 36
+    error_message = "Invalid Vault Role ID."
+  }
+}
+
+variable "vault_secret_id" {
+  type        = string
+  description = "Secret ID for Vault lookup"
   sensitive   = true
+
+  validation {
+    condition     = length(var.vault_secret_id) == 36
+    error_message = "Invalid Vault Secret ID."
+  }
+}
+
+provider "vault" {
+  address          = "https://vault.polaris.rest"
+  skip_child_token = true
+
+  auth_login {
+    path = "auth/approle/login"
+
+    parameters = {
+      role_id   = var.vault_role_id
+      secret_id = var.vault_secret_id
+    }
+  }
+}
+
+locals {
+  tenant_id       = "cbaca1db-904b-4586-a844-74be35525d81"
+  subscription_id = "a2470d3d-f20a-4263-b5d7-a424da9d52d9"
+}
+
+data "vault_azure_access_credentials" "client_info" {
+  role                        = "subscription-owner"
+  backend                     = "azure"
+  environment                 = "AzurePublicCloud"
+  tenant_id                   = local.tenant_id
+  subscription_id             = local.subscription_id
+  validate_creds              = true
+  num_sequential_successes    = 8
+  num_seconds_between_tests   = 1
+  max_cred_validation_seconds = 300
 }
 
 provider "azurerm" {
   features {}
 
-  client_id       = "dff8ae6f-2303-48ab-8e29-f5fc921ae8ea"
-  client_secret   = var.client_secret
-  tenant_id       = "cbaca1db-904b-4586-a844-74be35525d81"
-  subscription_id = "a2470d3d-f20a-4263-b5d7-a424da9d52d9"
+  client_id       = data.vault_azure_access_credentials.client_info.client_id
+  client_secret   = data.vault_azure_access_credentials.client_info.client_secret
+  tenant_id       = local.tenant_id
+  subscription_id = local.subscription_id
 }
 
 provider "coder" {
@@ -39,67 +89,67 @@ data "coder_parameter" "location" {
   icon         = "/emojis/1f310.png"
   mutable      = false
   option {
-    name = "CentralUS - Iowa"
+    name  = "CentralUS - Iowa"
     value = "centralus"
     icon  = "/emojis/1f1fa-1f1f8.png"
   }
   option {
-    name = "EastUS - Virginia"
+    name  = "EastUS - Virginia"
     value = "eastus"
     icon  = "/emojis/1f1fa-1f1f8.png"
   }
   option {
-    name = "EastUS2 - Virginia"
+    name  = "EastUS2 - Virginia"
     value = "eastus2"
     icon  = "/emojis/1f1fa-1f1f8.png"
   }
   option {
-    name = "SouthCentralUS - Texas"
+    name  = "SouthCentralUS - Texas"
     value = "southcentralus"
     icon  = "/emojis/1f1fa-1f1f8.png"
   }
   option {
-    name = "WestUS - Wyoming"
+    name  = "WestUS - Wyoming"
     value = "westus"
     icon  = "/emojis/1f1fa-1f1f8.png"
   }
   option {
-    name = "WestUS2 - Washington"
+    name  = "WestUS2 - Washington"
     value = "westus2"
     icon  = "/emojis/1f1fa-1f1f8.png"
   }
   option {
-    name = "WestUS3 - Arizona"
+    name  = "WestUS3 - Arizona"
     value = "westus3"
     icon  = "/emojis/1f1fa-1f1f8.png"
   }
   option {
-    name = "CanadaCentral - Toronto"
+    name  = "CanadaCentral - Toronto"
     value = "canadacentral"
     icon  = "/emojis/1f1e8-1f1e6.png"
   }
   option {
-    name = "SouthEastAsia - Singapore"
+    name  = "SouthEastAsia - Singapore"
     value = "southeastasia"
     icon  = "/emojis/1f1f0-1f1f7.png"
   }
   option {
-    name = "NorthEurope - Ireland"
+    name  = "NorthEurope - Ireland"
     value = "northeurope"
     icon  = "/emojis/1f1ea-1f1fa.png"
   }
   option {
-    name = "WestEurope - Netherlands"
+    name  = "WestEurope - Netherlands"
     value = "westeurope"
     icon  = "/emojis/1f1ea-1f1fa.png"
   }
   option {
-    name = "SouthAfricaNorth - Johannesburg"
+    name  = "SouthAfricaNorth - Johannesburg"
     value = "southafricanorth"
     icon  = "/emojis/1f1ff-1f1e6.png"
   }
   option {
-    name = "UKSouth - London"
+    name  = "UKSouth - London"
     value = "uksouth"
     icon  = "/emojis/1f1ec-1f1e7.png"
   }
@@ -113,47 +163,47 @@ data "coder_parameter" "instance_type" {
   icon         = "/icon/azure.png"
   mutable      = false
   option {
-    name = "Standard_B1s (1c/1GB) - $0.014/hr"
+    name  = "Standard_B1s (1c/1GB) - $0.014/hr"
     value = "Standard_B1s"
   }
   option {
-    name = "Standard_B1ms (1c/2GB) - $0.0207/hr"
+    name  = "Standard_B1ms (1c/2GB) - $0.0207/hr"
     value = "Standard_B1ms"
   }
   option {
-    name = "Standard_B2s (2c/4GB) - $0.0416/hr"
+    name  = "Standard_B2s (2c/4GB) - $0.0416/hr"
     value = "Standard_B2s"
   }
   option {
-    name = "Standard_B2ms (2c/8GB) - $0.0832/hr"
+    name  = "Standard_B2ms (2c/8GB) - $0.0832/hr"
     value = "Standard_B2ms"
   }
   option {
-    name = "Standard_B4ms (4c/16GB) - $0.166/hr"
+    name  = "Standard_B4ms (4c/16GB) - $0.166/hr"
     value = "Standard_B4ms"
   }
   option {
-    name = "Standard_B8ms (8c/32GB) - $0.333/hr"
+    name  = "Standard_B8ms (8c/32GB) - $0.333/hr"
     value = "Standard_B8ms"
   }
   option {
-    name = "Standard_D2ls_v5 (2c/4GB) - $0.085/hr"
+    name  = "Standard_D2ls_v5 (2c/4GB) - $0.085/hr"
     value = "Standard_D2ls_v5"
   }
   option {
-    name = "Standard_D4ls_v5 (4c/8GB) - $0.17/hr"
+    name  = "Standard_D4ls_v5 (4c/8GB) - $0.17/hr"
     value = "Standard_D4ls_v5"
   }
   option {
-    name = "Standard_D8as_v5 (8c/16GB) - $0.34/hr"
+    name  = "Standard_D8as_v5 (8c/16GB) - $0.34/hr"
     value = "Standard_D8ls_v5"
   }
   option {
-    name = "Standard_D16as_v5 (16c/32GB) - $0.68/hr"
+    name  = "Standard_D16as_v5 (16c/32GB) - $0.68/hr"
     value = "Standard_D16ls_v5"
   }
   option {
-    name = "Standard_D32as_v5 (32c/64GB) - $1.36/hr"
+    name  = "Standard_D32as_v5 (32c/64GB) - $1.36/hr"
     value = "Standard_D32ls_v5"
   }
 }
@@ -187,7 +237,7 @@ resource "random_password" "admin_password" {
 }
 
 locals {
-  prefix         = "coder-win-${data.coder_workspace.me.id}"
+  prefix         = "coder-${data.coder_workspace.me.owner}-${data.coder_workspace.me.name}"
   admin_username = data.coder_workspace.me.owner
 }
 
@@ -200,13 +250,15 @@ resource "azurerm_resource_group" "main" {
 }
 
 resource "azurerm_public_ip" "main" {
- name                = "${local.prefix}-ip"
- resource_group_name = azurerm_resource_group.main.name
- location            = azurerm_resource_group.main.location
- allocation_method   = "Static"
- tags = {
-   Coder_Provisioned = "true"
- }
+  name                = "${local.prefix}-ip"
+  resource_group_name = azurerm_resource_group.main.name
+  location            = azurerm_resource_group.main.location
+  allocation_method   = "Static"
+  tags = {
+    Coder_Provisioned = "true"
+    Workspace         = data.coder_workspace.me.id
+    Owner             = data.coder_workspace.me.owner
+  }
 }
 resource "azurerm_virtual_network" "main" {
   name                = "${local.prefix}-vnet"
@@ -215,6 +267,8 @@ resource "azurerm_virtual_network" "main" {
   resource_group_name = azurerm_resource_group.main.name
   tags = {
     Coder_Provisioned = "true"
+    Workspace         = data.coder_workspace.me.id
+    Owner             = data.coder_workspace.me.owner
   }
 }
 resource "azurerm_subnet" "internal" {
@@ -231,20 +285,27 @@ resource "azurerm_network_interface" "main" {
     name                          = "internal"
     subnet_id                     = azurerm_subnet.internal.id
     private_ip_address_allocation = "Dynamic"
-    // Uncomment for public IP address as well as azurerm_public_ip resource above
-    #    public_ip_address_id = azurerm_public_ip.main.id
+    public_ip_address_id          = azurerm_public_ip.main.id
   }
   tags = {
     Coder_Provisioned = "true"
+    Workspace         = data.coder_workspace.me.id
+    Owner             = data.coder_workspace.me.owner
   }
 }
 # Create storage account for boot diagnostics
-resource "azurerm_storage_account" "my_storage_account" {
+resource "azurerm_storage_account" "boot_diagnostics" {
   name                     = "diag${random_id.storage_id.hex}"
   location                 = azurerm_resource_group.main.location
   resource_group_name      = azurerm_resource_group.main.name
   account_tier             = "Standard"
   account_replication_type = "LRS"
+
+  tags = {
+    Coder_Provisioned = "true"
+    Workspace         = data.coder_workspace.me.id
+    Owner             = data.coder_workspace.me.owner
+  }
 }
 # Generate random text for a unique storage account name
 resource "random_id" "storage_id" {
@@ -255,19 +316,26 @@ resource "random_id" "storage_id" {
   byte_length = 8
 }
 
-resource "azurerm_managed_disk" "data" {
+resource "azurerm_managed_disk" "data_disk" {
   name                 = "${local.prefix}-data"
   location             = azurerm_resource_group.main.location
   resource_group_name  = azurerm_resource_group.main.name
   storage_account_type = "Standard_LRS"
   create_option        = "Empty"
   disk_size_gb         = data.coder_parameter.data_disk_size.value
+
+  tags = {
+    Coder_Provisioned = "true"
+    Workspace         = data.coder_workspace.me.id
+    Owner             = data.coder_workspace.me.owner
+  }
 }
 
 # Create virtual machine
 resource "azurerm_windows_virtual_machine" "main" {
   count                 = data.coder_workspace.me.transition == "start" ? 1 : 0
   name                  = "${local.prefix}-vm"
+  computer_name         = "coder-vm"
   admin_username        = local.admin_username
   admin_password        = random_password.admin_password.result
   location              = azurerm_resource_group.main.location
@@ -297,10 +365,12 @@ resource "azurerm_windows_virtual_machine" "main" {
     setting = "FirstLogonCommands"
   }
   boot_diagnostics {
-    storage_account_uri = azurerm_storage_account.my_storage_account.primary_blob_endpoint
+    storage_account_uri = azurerm_storage_account.boot_diagnostics.primary_blob_endpoint
   }
   tags = {
     Coder_Provisioned = "true"
+    Workspace         = data.coder_workspace.me.id
+    Owner             = data.coder_workspace.me.owner
   }
 }
 
@@ -313,7 +383,7 @@ resource "coder_app" "rdp" {
   external     = true
 }
 
-resource "coder_metadata" "rdp_login" {
+resource "coder_metadata" "rdp" {
   count       = data.coder_workspace.me.transition == "start" ? 1 : 0
   resource_id = azurerm_windows_virtual_machine.main[0].id
   item {
@@ -329,7 +399,7 @@ resource "coder_metadata" "rdp_login" {
 
 resource "azurerm_virtual_machine_data_disk_attachment" "main_data" {
   count              = data.coder_workspace.me.transition == "start" ? 1 : 0
-  managed_disk_id    = azurerm_managed_disk.data.id
+  managed_disk_id    = azurerm_managed_disk.data_disk.id
   virtual_machine_id = azurerm_windows_virtual_machine.main[0].id
   lun                = "10"
   caching            = "ReadWrite"

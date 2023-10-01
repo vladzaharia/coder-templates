@@ -23,7 +23,16 @@ users:
     groups: sudo
     shell: /bin/bash
 packages:
+  - curl
+  - direnv
   - git
+  - golang
+  - jq
+  - sudo
+  - vim
+  - qget
+  - zsh
+
 write_files:
   - path: /opt/coder/init
     permissions: "0755"
@@ -54,3 +63,5 @@ runcmd:
   - chown ${username}:${username} /home/${username}
   - systemctl enable coder-agent
   - systemctl start coder-agent
+  - curl -O https://starship.rs/install.sh && chmod +x install.sh && ./install.sh -y && rm -rf install.sh
+  - curl -fsSL https://get.docker.com | sh
