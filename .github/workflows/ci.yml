@@ -41,11 +41,11 @@ jobs:
       - name: Get changed files
         id: changed-files
         run: |
-          if [[ "${{github.event_name}}" == "push"; then
+          if [[ "${{github.event_name}}" == "push" ]]; then
             echo "changed_files=${{ steps.changed-files-push.outputs.any_changed }}" >> $GITHUB_OUTPUT
           fi
 
-          if [[ "${{github.event_name}}" == "workflow_dispatch"; then
+          if [[ "${{github.event_name}}" == "workflow_dispatch" ]]; then
             echo "changed_files=${{ steps.changed-files-manual.outputs.folders }}" >> $GITHUB_OUTPUT
           fi
 
