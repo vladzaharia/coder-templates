@@ -21,7 +21,7 @@ variable "vault_role_id" {
 
   validation {
     condition     = length(var.vault_role_id) == 36
-    error_message = "Invalid Vault Role ID."
+    error_message = "Invalid Vault Role ID"
   }
 }
 
@@ -32,7 +32,7 @@ variable "vault_secret_id" {
 
   validation {
     condition     = length(var.vault_secret_id) == 36
-    error_message = "Invalid Vault Secret ID."
+    error_message = "Invalid Vault Secret ID"
   }
 }
 
