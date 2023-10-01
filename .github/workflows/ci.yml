@@ -41,7 +41,7 @@ jobs:
         id: changed-files-manual
         if: github.event_name == 'workflow_dispatch'
         run: |
-          echo "folders=$(tree -J -d -L 1 | jq -c '.[0].contents | map(.name)')" >> $GITHUB_OUTPUT
+          echo "folders=$(tree -J -d -L 1 | jq -c '.[0].contents | map(.name)' | sed 's/"/\\"/g')" >> $GITHUB_OUTPUT
       - name: Get changed files
         id: changed-files
         run: |
