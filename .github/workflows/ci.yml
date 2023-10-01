@@ -56,7 +56,7 @@ jobs:
     needs: get_params
     name: Deploy templates
     runs-on: ubuntu-latest
-    if: ${{ needs.get_params.outputs.any_changed }}
+    if: ${{ needs.get_params.outputs.any_changed != 'false' }}
     strategy:
       matrix:
         template: ${{ needs.get_params.outputs.changed_files }}
