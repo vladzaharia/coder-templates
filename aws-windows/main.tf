@@ -267,13 +267,22 @@ resource "coder_metadata" "rdp" {
   resource_id = aws_instance.dev.id
   item {
     key   = "Username"
-    value = local.admin_username
+    value = "Administrator"
   }
   item {
     key       = "Password"
     value     = rsadecrypt(aws_instance.dev.password_data, tls_private_key.rsa.private_key_pem)
     sensitive = true
   }
+}
+
+resource "coder_app" "rdp" {
+  agent_id     = coder_agent.main.id
+  slug         = "rdp"
+  display_name = "Remote Desktop"
+  icon         = "https://yoolk.ninja/wp-content/uploads/2020/06/Apps-Ms-Remote-Desktop-1024x1024.png"
+  url          = "rdp://${aws_instance.dev.*.public_ip}:3389&username=s:Administrator"
+  external     = true
 }
 
 resource "coder_metadata" "workspace_info" {
