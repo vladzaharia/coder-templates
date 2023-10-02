@@ -263,19 +263,6 @@ resource "aws_instance" "dev" {
   }
 }
 
-resource "coder_metadata" "rdp" {
-  resource_id = aws_instance.dev.id
-  item {
-    key   = "Username"
-    value = "Administrator"
-  }
-  item {
-    key       = "Password"
-    value     = rsadecrypt(aws_instance.dev.password_data, tls_private_key.rsa.private_key_pem)
-    sensitive = true
-  }
-}
-
 resource "coder_app" "rdp" {
   agent_id     = coder_agent.main.id
   slug         = "rdp"
@@ -298,5 +285,14 @@ resource "coder_metadata" "workspace_info" {
   item {
     key   = "disk"
     value = "${aws_instance.dev.root_block_device[0].volume_size} GiB"
+  }
+  item {
+    key   = "Username"
+    value = "Administrator"
+  }
+  item {
+    key       = "Password"
+    value     = rsadecrypt(aws_instance.dev.password_data, tls_private_key.rsa.private_key_pem)
+    sensitive = true
   }
 }
