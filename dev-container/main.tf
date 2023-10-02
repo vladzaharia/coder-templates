@@ -112,102 +112,12 @@ data "coder_parameter" "size" {
   }
 }
 
-data "coder_parameter" "base_image" {
-  order       = 10
-  name        = "Base image"
-  description = "Base docker image to use for this workspace"
-  default     = "ubuntu:22.04"
-  icon        = "${data.coder_workspace.me.access_url}/icon/docker.png"
-  type        = "string"
-  mutable     = false
-
-  option {
-    name  = "Ubuntu 23.10"
-    value = "ubuntu:23.10"
-    icon  = "https://raw.githubusercontent.com/docker-library/docs/2ac3caaf21dfba9734f20518971983edc617c77c/ubuntu/logo.png"
-  }
-
-  option {
-    name  = "Ubuntu 22.04 LTS"
-    value = "ubuntu:22.04"
-    icon  = "https://raw.githubusercontent.com/docker-library/docs/2ac3caaf21dfba9734f20518971983edc617c77c/ubuntu/logo.png"
-  }
-
-  option {
-    name  = "Debian Bookworm"
-    value = "debian:bookworm"
-    icon  = "${data.coder_workspace.me.access_url}/icon/debian.svg"
-  }
-
-  option {
-    name  = "Golang"
-    value = "golang:bookworm"
-    icon  = "https://go.dev/blog/go-brand/Go-Logo/PNG/Go-Logo_Blue.png"
-  }
-
-  option {
-    name  = "Node LTS"
-    value = "node:lts-bookworm"
-    icon  = "https://seeklogo.com/images/N/nodejs-logo-FBE122E377-seeklogo.com.png"
-  }
-
-  option {
-    name  = "Node Current"
-    value = "node:current-bookworm"
-    icon  = "https://seeklogo.com/images/N/nodejs-logo-FBE122E377-seeklogo.com.png"
-  }
-
-  option {
-    name  = "OpenJDK 22"
-    value = "openjdk:22-bookworm"
-    icon  = "https://www.basis-europe.eu/wp-content/uploads/openjdk_Icon_logo.png"
-  }
-
-  option {
-    name  = "PHP"
-    value = "php:bookworm"
-    icon  = "https://www.svgrepo.com/show/452088/php.svg"
-  }
-
-  option {
-    name  = "Python"
-    value = "python:bookworm"
-    icon  = "https://www.svgrepo.com/show/452091/python.svg"
-  }
-
-  option {
-    name  = "Ruby"
-    value = "ruby:bookworm"
-    icon  = "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Ruby_logo.svg/1200px-Ruby_logo.svg.png"
-  }
-}
-
-data "coder_parameter" "custom_base_image" {
-  order       = 13
-  name        = "Custom base image"
-  description = "Overrides selected image above, if needed"
-  icon        = "${data.coder_workspace.me.access_url}/icon/docker.png"
-  default     = ""
-  mutable     = false
-}
-
-data "coder_parameter" "enable_dind" {
-  order       = 15
-  name        = "Enable Docker?"
-  description = "Enables Docker-in-Docker support, if needed"
-  icon        = "${data.coder_workspace.me.access_url}/icon/docker.png"
-  default     = false
-  type        = "bool"
-  mutable     = false
-}
-
-data "coder_parameter" "dotfiles_repo" {
-  order        = 150
-  name         = "dotfiles_repo"
-  display_name = "Dotfiles repo"
-  description  = "GitHub repository to download and install dotfiles, if provided."
-  icon         = "${data.coder_workspace.me.access_url}/icon/dotfiles.svg"
-  default      = ""
+data "coder_parameter" "github_repo" {
+  order        = 100
+  name         = "github_repo"
+  display_name = "GitHub repo"
+  description  = "GitHub repository to clone, as owner/repository"
+  icon         = "https://static-00.iconduck.com/assets.00/github-icon-512x497-oppthre2.png"
   mutable      = false
 }
 
@@ -236,9 +146,9 @@ resource "coder_agent" "main" {
     curl -fsSL https://code-server.dev/install.sh | sh -s -- --method=standalone --prefix=/tmp/code-server --version 4.11.0
     /tmp/code-server/bin/code-server --auth none --port 13337 >/tmp/code-server.log 2>&1 &
 
-    if [ -n "$DOTFILES_URI" ]; then
-      echo "Installing dotfiles from $DOTFILES_URI"
-      coder dotfiles -y "https://github.com/$DOTFILES_URI"
+    if [ ! -d ~/.ssh ]; then
+      mkdir -p ~/.ssh && chmod 700 ~/.ssh
+      ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts
     fi
   EOT
 
@@ -247,8 +157,6 @@ resource "coder_agent" "main" {
     GIT_COMMITTER_NAME  = "${data.coder_workspace.me.owner}"
     GIT_AUTHOR_EMAIL    = "${data.coder_workspace.me.owner_email}"
     GIT_COMMITTER_EMAIL = "${data.coder_workspace.me.owner_email}"
-    "DOTFILES_URI"      = data.coder_parameter.dotfiles_repo.value != "" ? data.coder_parameter.dotfiles_repo.value : null
-
   }, data.vault_generic_secret.dotenv.data)
 
   metadata {
@@ -282,7 +190,7 @@ resource "coder_app" "code-server" {
   agent_id     = coder_agent.main.id
   slug         = "code-server"
   display_name = "VS Code in Browser"
-  url          = "http://localhost:13337/?folder=/home/${local.username}"
+  url          = "http://localhost:13337/?folder=/home/${local.username}/workspace"
   icon         = "/icon/code.svg"
   subdomain    = false
   share        = "owner"
@@ -294,8 +202,8 @@ resource "coder_app" "code-server" {
   }
 }
 
-resource "docker_volume" "home_volume" {
-  name = "coder-${data.coder_workspace.me.id}-home"
+resource "docker_volume" "workspaces" {
+  name = "coder-${data.coder_workspace.me.id}-workspaces"
   # Protect the volume from being deleted due to changes in attributes.
   lifecycle {
     ignore_changes = all
@@ -321,76 +229,21 @@ resource "docker_volume" "home_volume" {
   }
 }
 
-resource "coder_metadata" "home_volume" {
-  resource_id = docker_volume.home_volume.id
-  item {
-    key   = "home"
-    value = "/home/${local.username}"
-  }
-}
-
-resource "docker_image" "main" {
-  name = "coder-${data.coder_workspace.me.id}"
-  build {
-    context = "./build"
-    build_args = {
-      IMAGE       = data.coder_parameter.custom_base_image.value != "" ? data.coder_parameter.custom_base_image.value : data.coder_parameter.base_image.value
-      USER        = local.username
-      ENABLE_DIND = "${data.coder_parameter.enable_dind.value}"
-    }
-  }
-  triggers = {
-    dir_sha1 = sha1(join("", [for f in fileset(path.module, "build/*") : filesha1(f)]))
-  }
-}
-
-resource "coder_metadata" "main_image" {
-  resource_id = docker_image.main.id
-  item {
-    key   = "base"
-    value = data.coder_parameter.base_image.value
-  }
-}
-
-resource "docker_network" "dind_network" {
-  name  = "network-${data.coder_workspace.me.id}"
-  count = data.coder_parameter.enable_dind.value ? 1 : 0
-}
-
-resource "coder_metadata" "dind_network" {
-  resource_id = docker_network.dind_network[0].id
-  item {
-    key   = "name"
-    value = docker_network.dind_network[0].name
-  }
-  count = data.coder_parameter.enable_dind.value ? 1 : 0
-}
-
-resource "docker_container" "dind" {
-  image      = "docker:dind"
-  privileged = true
-  name       = "dind-${data.coder_workspace.me.id}"
-  entrypoint = ["dockerd", "-H", "tcp://0.0.0.0:2375"]
-  networks_advanced {
-    name = docker_network.dind_network[0].name
-  }
-  count = data.coder_parameter.enable_dind.value ? 1 : 0
-}
-
 resource "docker_container" "workspace" {
   count = data.coder_workspace.me.start_count
-  image = docker_image.main.name
+  image = "ghcr.io/coder/envbuilder:0.2.1"
   # Uses lower() to avoid Docker restriction on container names.
   name = "coder-${data.coder_workspace.me.owner}-${lower(data.coder_workspace.me.name)}"
   # Hostname makes the shell more user friendly: coder@my-workspace:~$
   hostname = data.coder_workspace.me.name
   # Use the docker gateway if the access URL is 127.0.0.1
-  entrypoint = ["sh", "-c", replace(coder_agent.main.init_script, "/localhost|127\\.0\\.0\\.1/", "host.docker.internal")]
-  env = [
+  env = concat([
     "CODER_AGENT_TOKEN=${coder_agent.main.token}",
-    "CODER_ENV=true",
-    data.coder_parameter.enable_dind.value ? "DOCKER_HOST=${docker_container.dind[0].name}:2375" : "DOCKER_HOST="
-  ]
+    "CODER_AGENT_URL=${replace(data.coder_workspace.me.access_url, "/localhost|127\\.0\\.0\\.1/", "host.docker.internal")}",
+    "GIT_URL=https://github.com/${data.coder_parameter.github_repo.value}.git",
+    "INIT_SCRIPT=${replace(coder_agent.main.init_script, "/localhost|127\\.0\\.0\\.1/", "host.docker.internal")}",
+    "FALLBACK_IMAGE=ubuntu:latest"
+  ], [for k, v in data.vault_generic_secret.dotenv.data : "${k}=${v}"])
 
   cpu_set = local.size_mapping[data.coder_parameter.size.value].cores
   memory  = local.size_mapping[data.coder_parameter.size.value].memory
@@ -400,18 +253,10 @@ resource "docker_container" "workspace" {
     ip   = "host-gateway"
   }
   volumes {
-    container_path = "/home/${local.username}"
-    volume_name    = docker_volume.home_volume.name
+    container_path = "/workspaces"
+    volume_name    = docker_volume.workspaces.name
     read_only      = false
   }
-
-  dynamic "networks_advanced" {
-    for_each = data.coder_parameter.enable_dind.value ? [1] : []
-    content {
-      name = docker_network.dind_network[0].name
-    }
-  }
-
   # Add labels in Docker to keep track of orphan resources.
   labels {
     label = "coder.owner"

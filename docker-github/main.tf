@@ -72,6 +72,10 @@ locals {
   }
 }
 
+data "coder_git_auth" "github" {
+  id = "github"
+}
+
 data "coder_provisioner" "me" {
 }
 
@@ -87,7 +91,7 @@ data "coder_parameter" "size" {
   display_name = "Container size"
   description  = "Amount of resources to dedicate to this container"
   default      = "medium"
-  icon         = "${data.coder_workspace.me.access_url}/icon/memory.svg"
+  icon         = "${data.coder_workspace.me.access_url}/icon/docker.png"
   type         = "string"
   mutable      = false
 
@@ -201,6 +205,15 @@ data "coder_parameter" "enable_dind" {
   mutable     = false
 }
 
+data "coder_parameter" "github_repo" {
+  order        = 100
+  name         = "github_repo"
+  display_name = "GitHub repo"
+  description  = "GitHub repository to clone, as owner/repository"
+  icon         = "https://static-00.iconduck.com/assets.00/github-icon-512x497-oppthre2.png"
+  mutable      = false
+}
+
 data "coder_parameter" "dotfiles_repo" {
   order        = 150
   name         = "dotfiles_repo"
@@ -236,9 +249,21 @@ resource "coder_agent" "main" {
     curl -fsSL https://code-server.dev/install.sh | sh -s -- --method=standalone --prefix=/tmp/code-server --version 4.11.0
     /tmp/code-server/bin/code-server --auth none --port 13337 >/tmp/code-server.log 2>&1 &
 
+    # Add Github key
+    if [ ! -d ~/.ssh ]; then
+      mkdir -p ~/.ssh && chmod 700 ~/.ssh
+      ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts
+    fi
+
+    # Install dotfiles
     if [ -n "$DOTFILES_URI" ]; then
       echo "Installing dotfiles from $DOTFILES_URI"
       coder dotfiles -y "https://github.com/$DOTFILES_URI"
+    fi
+
+    # Clone workspace
+    if [ ! -d ~/workspace/.git ]; then
+      git clone https://github.com/${data.coder_parameter.github_repo.value}.git ~/workspace
     fi
   EOT
 
@@ -247,8 +272,8 @@ resource "coder_agent" "main" {
     GIT_COMMITTER_NAME  = "${data.coder_workspace.me.owner}"
     GIT_AUTHOR_EMAIL    = "${data.coder_workspace.me.owner_email}"
     GIT_COMMITTER_EMAIL = "${data.coder_workspace.me.owner_email}"
+    GITHUB_TOKEN        = "${data.coder_git_auth.github.access_token}"
     "DOTFILES_URI"      = data.coder_parameter.dotfiles_repo.value != "" ? data.coder_parameter.dotfiles_repo.value : null
-
   }, data.vault_generic_secret.dotenv.data)
 
   metadata {
@@ -282,7 +307,7 @@ resource "coder_app" "code-server" {
   agent_id     = coder_agent.main.id
   slug         = "code-server"
   display_name = "VS Code in Browser"
-  url          = "http://localhost:13337/?folder=/home/${local.username}"
+  url          = "http://localhost:13337/?folder=/home/${local.username}/workspace"
   icon         = "/icon/code.svg"
   subdomain    = false
   share        = "owner"
@@ -327,6 +352,10 @@ resource "coder_metadata" "home_volume" {
     key   = "home"
     value = "/home/${local.username}"
   }
+  item {
+    key   = "workspace"
+    value = "/home/${local.username}/workspace"
+  }
 }
 
 resource "docker_image" "main" {
@@ -348,7 +377,11 @@ resource "coder_metadata" "main_image" {
   resource_id = docker_image.main.id
   item {
     key   = "base"
-    value = data.coder_parameter.base_image.value
+    value = data.coder_parameter.custom_base_image.value != "" ? data.coder_parameter.custom_base_image.value : data.coder_parameter.base_image.value
+  }
+  item {
+    key   = "repo"
+    value = data.coder_parameter.github_repo.value
   }
 }
 
