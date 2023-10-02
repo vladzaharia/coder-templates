@@ -243,7 +243,7 @@ resource "aws_instance" "dev" {
   availability_zone = "${data.coder_parameter.region.value}a"
   instance_type     = data.coder_parameter.instance_type.value
 
-  key_name = "dev-key-pair"
+  key_name = aws_key_pair.dev-key-pair.key_name
 
   user_data = data.coder_workspace.me.transition == "start" ? local.user_data_start : local.user_data_end
 
