@@ -1,4 +1,4 @@
-name: ci
+name: Deploy templates (CI)
 
 on:
   push:
@@ -10,6 +10,8 @@ on:
         description: 'Message to use for the template push, defaults to the commit message'
         required: false
         type: string
+
+run-name: ${{ inputs.message || '' }}
 
 jobs:
   get_params:
