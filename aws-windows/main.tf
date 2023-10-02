@@ -281,7 +281,7 @@ resource "coder_app" "rdp" {
   slug         = "rdp"
   display_name = "Remote Desktop"
   icon         = "https://yoolk.ninja/wp-content/uploads/2020/06/Apps-Ms-Remote-Desktop-1024x1024.png"
-  url          = "rdp://${aws_instance.dev.*.public_ip}:3389&username=s:Administrator"
+  url          = "rdp://${aws_instance.dev.public_ip}:3389&username=s:Administrator"
   external     = true
 }
 
