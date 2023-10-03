@@ -1,0 +1,58 @@
+name: Validate templates (PR)
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  get_params:
+    name: Get validation parameters
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      all_changed_files: ${{ steps.changed-files.outputs.changed_files }}
+      any_changed: ${{ steps.changed-files.outputs.any_changed }}
+    steps:
+      - name: Get changed files (for PR)
+        id: changed-files-pr
+        uses: tj-actions/changed-files@v39
+        with:
+          dir_names: true
+          dir_names_exclude_current_dir: true
+          json: true
+          files_ignore: |
+            .github/**/*
+            **/*.md
+      - name: Get changed files
+        id: changed-files
+        run: |
+          if [[ "${{github.event_name}}" == "pull_request" ]]; then
+            echo "changed_files=${{ steps.changed-files-pr.outputs.all_changed_files }}" >> $GITHUB_OUTPUT
+            echo "any_changed=${{ steps.changed-files-pr.outputs.any_changed }}" >> $GITHUB_OUTPUT
+          fi
+    
+  validate_template:
+    needs: get_params
+    name: Validate templates
+    runs-on: ubuntu-latest
+    if: ${{ needs.get_params.outputs.any_changed != 'false' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        template: ${{ fromJson(needs.get_params.outputs.all_changed_files) }}
+    steps:
+      - name: Checkout files
+        uses: actions/checkout@v3
+      - name: Use Terraform
+        uses: hashicorp/setup-terraform@v2
+      - name: Download packages
+        run: terraform init
+        working-directory: ./${{ matrix.template }}
+      - name: Validate template
+        run: terraform plan -var "vault_role_id="$VAULT_ROLE_ID"" -var "vault_secret_id="$VAULT_SECRET_ID""
+        working-directory: ./${{ matrix.template }}
+        env:
+            VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
+            VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
