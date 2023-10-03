@@ -30,7 +30,7 @@ jobs:
     needs: get_params
     name: Deploy templates
     runs-on: ubuntu-latest
-    if: ${{ needs.get_params.outputs.any_changed != 'false' }}
+    if: ${{ needs.get_params.outputs.any_changed }}
     strategy:
       fail-fast: false
       matrix:
