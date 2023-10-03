@@ -205,7 +205,6 @@ data "aws_ami" "ubuntu" {
 }
 
 resource "coder_agent" "dev" {
-  count                  = data.coder_workspace.me.start_count
   arch                   = "amd64"
   auth                   = "aws-instance-identity"
   os                     = "linux"
@@ -242,8 +241,7 @@ resource "coder_agent" "dev" {
 }
 
 resource "coder_app" "code-server" {
-  count        = data.coder_workspace.me.start_count
-  agent_id     = coder_agent.dev[0].id
+  agent_id     = coder_agent.dev.id
   slug         = "code-server"
   display_name = "code-server"
   url          = "http://localhost:13337/?folder=/home/coder"
@@ -262,7 +260,7 @@ locals {
   linux_user = data.coder_workspace.me.owner
   user_data = templatefile("cloud-config.yaml.tftpl", {
     username    = local.linux_user
-    init_script = base64encode(coder_agent.dev[0].init_script)
+    init_script = base64encode(coder_agent.dev.init_script)
     hostname    = lower(data.coder_workspace.me.name)
   })
 }
