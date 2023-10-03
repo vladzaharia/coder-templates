@@ -28,14 +28,14 @@ jobs:
       - name: Get changed files
         id: changed-files
         run: |
-          if [[ "${{github.event_name}}" == "push" ]]; then
+          if [[ "${{github.event_name}}" == "pull_request" ]]; then
             echo "changed_files=${{ steps.changed-files-pr.outputs.all_changed_files }}" >> $GITHUB_OUTPUT
             echo "any_changed=${{ steps.changed-files-pr.outputs.any_changed }}" >> $GITHUB_OUTPUT
           fi
     
   validate_template:
     needs: get_params
-    name: Deploy templates
+    name: Validate templates
     runs-on: ubuntu-latest
     if: ${{ needs.get_params.outputs.any_changed != 'false' }}
     strategy:
