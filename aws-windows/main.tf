@@ -287,11 +287,11 @@ resource "coder_metadata" "workspace_info" {
     value = "${aws_instance.dev.root_block_device[0].volume_size} GiB"
   }
   item {
-    key   = "Username"
+    key   = "username"
     value = "Administrator"
   }
   item {
-    key       = "Password"
+    key       = "password"
     value     = rsadecrypt(aws_instance.dev.password_data, tls_private_key.rsa.private_key_pem)
     sensitive = true
   }

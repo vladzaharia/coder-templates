@@ -387,13 +387,30 @@ resource "coder_metadata" "rdp" {
   count       = data.coder_workspace.me.transition == "start" ? 1 : 0
   resource_id = azurerm_windows_virtual_machine.main[0].id
   item {
-    key   = "Username"
+    key   = "region"
+    value = data.coder_parameter.region.value
+  }
+  item {
+    key   = "instance type"
+    value = aws_instance.dev.instance_type
+  }
+  item {
+    key   = "username"
     value = local.admin_username
   }
   item {
-    key       = "Password"
+    key       = "password"
     value     = random_password.admin_password.result
     sensitive = true
+  }
+}
+
+resource "coder_metadata" "data_info" {
+  resource_id = azurerm_managed_disk.data_disk.id
+
+  item {
+    key   = "size"
+    value = "${data.coder_parameter.data_disk_size.value} GiB"
   }
 }
 

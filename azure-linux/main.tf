@@ -405,8 +405,16 @@ resource "coder_metadata" "workspace_info" {
   resource_id = azurerm_linux_virtual_machine.main[0].id
 
   item {
-    key   = "type"
+    key   = "region"
+    value = data.coder_parameter.location.value
+  }
+  item {
+    key   = "instance type"
     value = azurerm_linux_virtual_machine.main[0].size
+  }
+  item {
+    key   = "username"
+    value = data.coder_workspace.me.owner
   }
 }
 

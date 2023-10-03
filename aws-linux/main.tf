@@ -259,7 +259,7 @@ resource "coder_app" "code-server" {
 }
 
 locals {
-  linux_user = "coder"
+  linux_user = data.coder_workspace.me.owner
   user_data = data.coder_workspace.me.start_count > 0 ? trimspace(<<EOT
 Content-Type: multipart/mixed; boundary="//"
 MIME-Version: 1.0
@@ -318,6 +318,10 @@ resource "coder_metadata" "workspace_info" {
   item {
     key   = "disk"
     value = "${aws_instance.dev.root_block_device[0].volume_size} GiB"
+  }
+  item {
+    key   = "username"
+    value = local.linux_user
   }
 }
 
