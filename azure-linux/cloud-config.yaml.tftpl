@@ -21,7 +21,9 @@ users:
   - name: ${username}
     sudo: ["ALL=(ALL) NOPASSWD:ALL"]
     groups: sudo
-    shell: /bin/bash
+    shell: /bin/zsh
+package_update: true
+package_upgrade: true
 packages:
   - curl
   - direnv
