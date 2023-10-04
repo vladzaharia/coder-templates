@@ -212,6 +212,8 @@ locals {
   # User data is used to stop/start AWS instances. See:
   # https://github.com/hashicorp/terraform-provider-aws/issues/22
 
+  availability_zone = "${data.coder_parameter.region.value}a"
+
   user_data_start = base64encode(
     templatefile("${path.module}/Initialize.ps1.tftpl", { init_script = coder_agent.main.init_script })
   )
@@ -224,14 +226,35 @@ shutdown /s
 EOT
 }
 
-resource "aws_key_pair" "dev-key-pair" {
-  key_name   = "tf-key-pair"
-  public_key = tls_private_key.rsa.public_key_openssh
-}
-
 resource "tls_private_key" "rsa" {
   algorithm = "RSA"
   rsa_bits  = 4096
+}
+
+resource "coder_metadata" "private-key" {
+  resource_id = tls_private_key.rsa.id
+  item {
+    key   = "algorithm"
+    value = tls_private_key.rsa.algorithm
+  }
+
+  item {
+    key   = "bit size"
+    value = tls_private_key.rsa.rsa_bits
+  }
+}
+
+resource "aws_key_pair" "dev" {
+  key_name   = "coder-${data.coder_workspace.me.owner}-${data.coder_workspace.me.name}-key-pair"
+  public_key = tls_private_key.rsa.public_key_openssh
+}
+
+resource "coder_metadata" "key-pair" {
+  resource_id = aws_key_pair.dev.id
+  item {
+    key   = "name"
+    value = "coder-${data.coder_workspace.me.owner}-${data.coder_workspace.me.name}-key-pair"
+  }
 }
 
 resource "aws_vpc" "dev" {
@@ -242,36 +265,82 @@ resource "aws_vpc" "dev" {
   }
 }
 
-resource "aws_subnet" "default" {
+resource "coder_metadata" "vpc" {
+  resource_id = aws_vpc.dev.id
+  item {
+    key   = "name"
+    value = "coder-${data.coder_workspace.me.owner}-${data.coder_workspace.me.name}-vpc"
+  }
+  item {
+    key   = "cidr block"
+    value = aws_vpc.dev.cidr_block
+  }
+}
+
+resource "aws_subnet" "dev" {
   vpc_id            = aws_vpc.dev.id
   cidr_block        = "172.16.10.0/24"
-  availability_zone = "${data.coder_parameter.region.value}a"
+  availability_zone = local.availability_zone
 
   tags = {
     Name = "coder-${data.coder_workspace.me.owner}-${data.coder_workspace.me.name}-subnet"
   }
 }
 
-resource "aws_security_group" "allow_rdp" {
-  name        = "allow_rdp"
-  description = "Allow RDP inbound traffic"
+resource "coder_metadata" "subnet" {
+  resource_id = aws_subnet.dev.id
+  item {
+    key   = "name"
+    value = "coder-${data.coder_workspace.me.owner}-${data.coder_workspace.me.name}-subnet"
+  }
+  item {
+    key   = "cidr block"
+    value = aws_subnet.dev.cidr_block
+  }
+}
+
+# resource "aws_security_group" "allow_rdp" {
+#   name        = "coder-${data.coder_workspace.me.owner}-${data.coder_workspace.me.name}-allow-rdp"
+#   description = "Allow RDP inbound traffic"
+#   vpc_id      = aws_vpc.dev.id
+
+#   ingress {
+#     description = "RDP from VPC"
+#     from_port   = 3389
+#     to_port     = 3389
+#     protocol    = "tcp"
+#     cidr_blocks = [aws_vpc.dev.cidr_block]
+#   }
+
+#   egress {
+#     from_port   = 0
+#     to_port     = 0
+#     protocol    = "-1"
+#     cidr_blocks = ["0.0.0.0/0"]
+#   }
+
+#   tags = {
+#     Name = "allow_rdp"
+#   }
+# }
+
+resource "aws_security_group" "allow_all" {
+  name        = "coder-${data.coder_workspace.me.owner}-${data.coder_workspace.me.name}-allow-all"
+  description = "Allow all inbound traffic"
   vpc_id      = aws_vpc.dev.id
 
   ingress {
-    description      = "RDP from VPC"
-    from_port        = 3389
-    to_port          = 3389
-    protocol         = "tcp"
-    cidr_blocks      = [aws_vpc.dev.cidr_block]
-    ipv6_cidr_blocks = [aws_vpc.dev.ipv6_cidr_block]
+    from_port   = 3389
+    to_port     = 3389
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   tags = {
@@ -280,12 +349,13 @@ resource "aws_security_group" "allow_rdp" {
 }
 
 resource "aws_instance" "dev" {
-  ami               = data.aws_ami.windows.id
-  availability_zone = "${data.coder_parameter.region.value}a"
-  instance_type     = data.coder_parameter.instance_type.value
-  subnet_id         = aws_subnet.default.id
+  ami                         = data.aws_ami.windows.id
+  availability_zone           = local.availability_zone
+  instance_type               = data.coder_parameter.instance_type.value
+  subnet_id                   = aws_subnet.dev.id
+  associate_public_ip_address = true
 
-  key_name = aws_key_pair.dev-key-pair.key_name
+  key_name = aws_key_pair.dev.key_name
 
   user_data = data.coder_workspace.me.transition == "start" ? local.user_data_start : local.user_data_end
 
@@ -336,5 +406,9 @@ resource "coder_metadata" "workspace_info" {
     key       = "password"
     value     = rsadecrypt(aws_instance.dev.password_data, tls_private_key.rsa.private_key_pem)
     sensitive = true
+  }
+  item {
+    key   = "public ip"
+    value = aws_instance.dev.public_ip
   }
 }
