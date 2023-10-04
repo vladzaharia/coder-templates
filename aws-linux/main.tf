@@ -142,6 +142,16 @@ data "coder_parameter" "instance_type" {
   }
 }
 
+data "coder_parameter" "dotfiles_repo" {
+  order        = 150
+  name         = "dotfiles_repo"
+  display_name = "Dotfiles repo"
+  description  = "GitHub repository to download and install dotfiles, if provided."
+  icon         = "https://static-00.iconduck.com/assets.00/github-icon-512x497-oppthre2.png"
+  default      = ""
+  mutable      = false
+}
+
 variable "vault_role_id" {
   type        = string
   description = "Role ID for Vault lookup"
@@ -215,7 +225,20 @@ resource "coder_agent" "dev" {
     # install and start code-server
     curl -fsSL https://code-server.dev/install.sh | sh -s -- --method=standalone --prefix=/tmp/code-server --version 4.11.0
     /tmp/code-server/bin/code-server --auth none --port 13337 >/tmp/code-server.log 2>&1 &
+
+    if [ -n "$DOTFILES_URI" ]; then
+      echo "Installing dotfiles from $DOTFILES_URI"
+      coder dotfiles -y "https://github.com/$DOTFILES_URI"
+    fi
   EOT
+
+  env = {
+    GIT_AUTHOR_NAME     = "${data.coder_workspace.me.owner}"
+    GIT_COMMITTER_NAME  = "${data.coder_workspace.me.owner}"
+    GIT_AUTHOR_EMAIL    = "${data.coder_workspace.me.owner_email}"
+    GIT_COMMITTER_EMAIL = "${data.coder_workspace.me.owner_email}"
+    DOTFILES_URI        = data.coder_parameter.dotfiles_repo.value != "" ? data.coder_parameter.dotfiles_repo.value : null
+  }
 
   metadata {
     key          = "cpu"
