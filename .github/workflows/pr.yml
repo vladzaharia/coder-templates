@@ -47,6 +47,13 @@ jobs:
         uses: actions/checkout@v3
       - name: Use Terraform
         uses: hashicorp/setup-terraform@v2
+      - name: Cache Terraform packages
+        uses: actions/cache@v3
+        with:
+          path: ./${{ matrix.template }}/.terraform
+          key: ${{ runner.os }}-terraform-${{ hashFiles(format('./{0}/.terraform.lock.hcl', matrix.template)) }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
       - name: Download Terraform packages
         run: terraform init
         working-directory: ./${{ matrix.template }}
