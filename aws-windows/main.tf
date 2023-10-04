@@ -234,10 +234,56 @@ resource "tls_private_key" "rsa" {
   rsa_bits  = 4096
 }
 
+resource "aws_vpc" "dev" {
+  cidr_block = "172.16.0.0/16"
+
+  tags = {
+    Name = "coder-${data.coder_workspace.me.owner}-${data.coder_workspace.me.name}-vpc"
+  }
+}
+
+resource "aws_subnet" "default" {
+  vpc_id            = aws_vpc.dev.id
+  cidr_block        = "172.16.10.0/24"
+  availability_zone = "${data.coder_parameter.region.value}a"
+
+  tags = {
+    Name = "coder-${data.coder_workspace.me.owner}-${data.coder_workspace.me.name}-subnet"
+  }
+}
+
+resource "aws_security_group" "allow_rdp" {
+  name        = "allow_rdp"
+  description = "Allow RDP inbound traffic"
+  vpc_id      = aws_vpc.dev.id
+
+  ingress {
+    description      = "RDP from VPC"
+    from_port        = 3389
+    to_port          = 3389
+    protocol         = "tcp"
+    cidr_blocks      = [aws_vpc.dev.cidr_block]
+    ipv6_cidr_blocks = [aws_vpc.dev.ipv6_cidr_block]
+  }
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  tags = {
+    Name = "allow_rdp"
+  }
+}
+
 resource "aws_instance" "dev" {
   ami               = data.aws_ami.windows.id
   availability_zone = "${data.coder_parameter.region.value}a"
   instance_type     = data.coder_parameter.instance_type.value
+  subnet_id         = aws_subnet.default.id
 
   key_name = aws_key_pair.dev-key-pair.key_name
 
