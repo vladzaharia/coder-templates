@@ -212,13 +212,9 @@ locals {
   # User data is used to stop/start AWS instances. See:
   # https://github.com/hashicorp/terraform-provider-aws/issues/22
 
-  user_data_start = <<EOT
-<powershell>
-[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-${coder_agent.main.init_script}
-</powershell>
-<persist>true</persist>
-EOT
+  user_data_start = base64encode(
+    templatefile("${path.module}/Initialize.ps1.tftpl", { init_script = coder_agent.main.init_script })
+  )
 
   user_data_end = <<EOT
 <powershell>
