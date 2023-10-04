@@ -53,7 +53,7 @@ jobs:
           path: ./${{ matrix.template }}/.terraform
           key: ${{ runner.os }}-terraform-${{ hashFiles(format('./{0}/.terraform.lock.hcl', matrix.template)) }}
           restore-keys: |
-            ${{ runner.os }}-nuget-
+            ${{ runner.os }}-terraform-
       - name: Download Terraform packages
         run: terraform init
         working-directory: ./${{ matrix.template }}
