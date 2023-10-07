@@ -38,6 +38,8 @@ jobs:
     name: Validate templates
     runs-on: ubuntu-latest
     if: ${{ needs.get_params.outputs.any_changed != 'false' }}
+    permissions:
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
