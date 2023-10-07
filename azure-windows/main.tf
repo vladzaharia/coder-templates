@@ -388,11 +388,11 @@ resource "coder_metadata" "rdp" {
   resource_id = azurerm_windows_virtual_machine.main[0].id
   item {
     key   = "region"
-    value = data.coder_parameter.region.value
+    value = data.coder_parameter.location.value
   }
   item {
     key   = "instance type"
-    value = aws_instance.dev.instance_type
+    value = data.coder_parameter.instance_type.value
   }
   item {
     key   = "username"
