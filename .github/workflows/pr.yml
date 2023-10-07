@@ -65,8 +65,8 @@ jobs:
           method: jwt
           jwtGithubAudience: sigstore
           secrets: |
-            /ci-cd/dns/coder-templates/pr VAULT_ROLE_ID ;
-            /ci-cd/dns/coder-templates/pr VAULT_SECRET_ID
+            /ci-cd/coder-templates/pr VAULT_ROLE_ID ;
+            /ci-cd/coder-templates/pr VAULT_SECRET_ID
       - name: Download Terraform packages
         run: terraform init
         working-directory: ./${{ matrix.template }}

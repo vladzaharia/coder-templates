@@ -90,8 +90,8 @@ jobs:
           method: jwt
           jwtGithubAudience: sigstore
           secrets: |
-            /ci-cd/dns/coder-templates/ci VAULT_ROLE_ID ;
-            /ci-cd/dns/coder-templates/ci VAULT_SECRET_ID
+            /ci-cd/coder-templates/ci VAULT_ROLE_ID ;
+            /ci-cd/coder-templates/ci VAULT_SECRET_ID
   
       - name: Push template
         run: |
