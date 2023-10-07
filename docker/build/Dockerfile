@@ -7,8 +7,11 @@ RUN apt-get update \
 	curl \
 	direnv \
 	git \
+	gpg \
 	golang \
 	jq \
+	lsb-release \
+	make \
 	sudo \
 	vim \
 	wget \
@@ -24,13 +27,9 @@ RUN if [ "${ENABLE_DIND}" = "true" ]; then \
 fi
 
 # Install Terraform
-RUN wget -O- https://apt.releases.hashicorp.com/gpg | \
-	gpg --dearmor | \
-	sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg
-RUN echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] \
-	https://apt.releases.hashicorp.com $(lsb_release -cs) main" | \
-	sudo tee /etc/apt/sources.list.d/hashicorp.list
-RUN apt-get update && apt-get install -y terraform 
+RUN wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+RUN apt-get update && apt-get install -y terraform vault
 
 # Clean up apt
 RUN rm -rf /var/lib/apt/lists/*
