@@ -32,7 +32,7 @@ packages:
   - jq
   - sudo
   - vim
-  - qget
+  - wget
   - zsh
 
 write_files:
@@ -67,3 +67,4 @@ runcmd:
   - systemctl start coder-agent
   - curl -O https://starship.rs/install.sh && chmod +x install.sh && ./install.sh -y && rm -rf install.sh
   - curl -fsSL https://get.docker.com | sh
+  # - apt-get install curl direnv git golang jq sudo vim wget zsh
