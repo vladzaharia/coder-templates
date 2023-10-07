@@ -7,13 +7,15 @@ RUN apt-get update \
 	curl \
 	direnv \
 	git \
+	gpg \
 	golang \
 	jq \
+	lsb-release \
+	make \
 	sudo \
 	vim \
 	wget \
-	zsh \
-	&& rm -rf /var/lib/apt/lists/*
+	zsh
 
 # Install Starship
 RUN curl -O https://starship.rs/install.sh && chmod +x install.sh && ./install.sh -y && rm -rf install.sh
@@ -23,6 +25,14 @@ ARG ENABLE_DIND=false
 RUN if [ "${ENABLE_DIND}" = "true" ]; then \
 	curl -fsSL https://get.docker.com | sh; \
 fi
+
+# Install Terraform
+RUN wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+RUN apt-get update && apt-get install -y terraform vault
+
+# Clean up apt
+RUN rm -rf /var/lib/apt/lists/*
 
 # Add user
 ARG USER=coder

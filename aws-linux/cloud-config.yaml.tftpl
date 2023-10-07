@@ -7,6 +7,8 @@ users:
     sudo: ["ALL=(ALL) NOPASSWD:ALL"]
     groups: sudo
     shell: /bin/bash
+package_update: true
+package_upgrade: true
 packages:
   - curl
   - direnv
@@ -15,7 +17,7 @@ packages:
   - jq
   - sudo
   - vim
-  - qget
+  - wget
   - zsh
 
 write_files:
@@ -50,3 +52,4 @@ runcmd:
   - systemctl start coder-agent
   - curl -O https://starship.rs/install.sh && chmod +x install.sh && ./install.sh -y && rm -rf install.sh
   - curl -fsSL https://get.docker.com | sh
+  - apt-get install direnv git zsh -y
