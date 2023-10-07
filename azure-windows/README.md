@@ -1,6 +1,6 @@
 ---
-name: Develop in Windows on Azure
-description: Get started with Windows development on Microsoft Azure.
+name: Azure Windows VM
+description: Run a Windows VM on Azure
 tags: [cloud, azure, windows]
 icon: /icon/azure.png
 ---

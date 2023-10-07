@@ -1,7 +1,7 @@
 ---
-name: Develop in Windows on AWS
-description: Get started with Windows development on AWS.
-tags: [cloud, aws]
+name: AWS Windows VM
+description: Run Windows Server on AWS
+tags: [cloud, aws, windows]
 icon: /icon/aws.png
 ---
 

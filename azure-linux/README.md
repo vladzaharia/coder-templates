@@ -1,7 +1,7 @@
 ---
-name: Develop in Linux on Azure
-description: Get started with Linux development on Microsoft Azure.
-tags: [cloud, azure, linux]
+name: Azure Linux VM
+description: Run an Ubuntu VM on Azure
+tags: [cloud, azure, linux, dotfiles]
 icon: /icon/azure.png
 ---
 

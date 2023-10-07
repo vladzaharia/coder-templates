@@ -1,7 +1,7 @@
 ---
-name: Develop in Docker
-description: Run workspaces on a Docker host using registry images
-tags: [local, docker]
+name: Docker Workspace
+description: Run empty workspace on a Docker host using registry images
+tags: [local, docker, dotfiles, vault]
 icon: /icon/docker.png
 ---
 
