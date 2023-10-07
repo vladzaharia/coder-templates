@@ -8,6 +8,10 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "> 3.0.0, < 4.0.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "> 3.0.0, < 4.0.0"
+    }
     vault = {
       source  = "hashicorp/vault"
       version = "> 3.20.0, < 4.0.0"
@@ -240,6 +244,7 @@ resource "coder_agent" "main" {
   auth = "azure-instance-identity"
 
   startup_script = <<-EOT
+    #!/bin/bash
     set -e
     if [ -n "$DOTFILES_URI" ]; then
       echo "Installing dotfiles from $DOTFILES_URI"
@@ -286,7 +291,7 @@ resource "coder_agent" "main" {
     script       = <<-EOT
       #!/bin/bash
       set -e
-      df /home/coder | awk '$NF=="/"{printf "%s", $5}'
+      df /home/${data.coder_workspace.me.owner} | awk '$NF=="/"{printf "%s", $5}'
     EOT
   }
 }
@@ -362,6 +367,29 @@ resource "azurerm_network_interface" "main" {
   }
 }
 
+# Create storage account for boot diagnostics
+resource "azurerm_storage_account" "boot_diagnostics" {
+  name                     = "diag${random_id.storage_id.hex}"
+  location                 = azurerm_resource_group.main.location
+  resource_group_name      = azurerm_resource_group.main.name
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+
+  tags = {
+    Coder_Provisioned = "true"
+    Workspace         = data.coder_workspace.me.id
+    Owner             = data.coder_workspace.me.owner
+  }
+}
+# Generate random text for a unique storage account name
+resource "random_id" "storage_id" {
+  keepers = {
+    # Generate a new ID only when a new resource group is defined
+    resource_group = azurerm_resource_group.main.name
+  }
+  byte_length = 8
+}
+
 resource "azurerm_managed_disk" "home" {
   create_option        = "Empty"
   location             = azurerm_resource_group.main.location
@@ -412,6 +440,10 @@ resource "azurerm_linux_virtual_machine" "main" {
     version   = "latest"
   }
   user_data = base64encode(local.userdata)
+
+  boot_diagnostics {
+    storage_account_uri = azurerm_storage_account.boot_diagnostics.primary_blob_endpoint
+  }
 
   tags = {
     Coder_Provisioned = "true"
