@@ -25,7 +25,6 @@ jobs:
           json: true
           files_ignore: |
             .github/**/*
-            **/*.md
       - name: Get changed files
         id: changed-files
         run: |
