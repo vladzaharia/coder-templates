@@ -116,7 +116,7 @@ data "coder_parameter" "base_image" {
   order       = 10
   name        = "Base image"
   description = "Base docker image to use for this workspace"
-  default     = "ubuntu:22.04"
+  default     = "ubuntu:24.04"
   icon        = "/icon/docker.svg"
   type        = "string"
   mutable     = false
@@ -249,6 +249,7 @@ resource "coder_script" "dotfiles" {
     if [ -n "$DOTFILES_URI" ]; then
       echo "Installing dotfiles from $DOTFILES_URI"
       coder dotfiles -y "https://github.com/$DOTFILES_URI"
+      bash ~/.config/coderv2/dotfiles/bootstrap.sh
     fi
   EOT
 }
