@@ -121,68 +121,80 @@ data "coder_parameter" "base_image" {
   name        = "Base image"
   description = "Base docker image to use for this workspace"
   default     = "ubuntu:22.04"
-  icon        = "${data.coder_workspace.me.access_url}/icon/docker.png"
+  icon        = "/icon/docker.svg"
   type        = "string"
   mutable     = false
 
   option {
+    name  = "Ubuntu 24.04 LTS"
+    value = "ubuntu:24.04"
+    icon  = "/icon/ubuntu.svg"
+  }
+
+  option {
     name  = "Ubuntu 23.10"
     value = "ubuntu:23.10"
-    icon  = "https://raw.githubusercontent.com/docker-library/docs/2ac3caaf21dfba9734f20518971983edc617c77c/ubuntu/logo.png"
+    icon  = "/icon/ubuntu.svg"
   }
 
   option {
     name  = "Ubuntu 22.04 LTS"
     value = "ubuntu:22.04"
-    icon  = "https://raw.githubusercontent.com/docker-library/docs/2ac3caaf21dfba9734f20518971983edc617c77c/ubuntu/logo.png"
+    icon  = "/icon/ubuntu.svg"
   }
 
   option {
     name  = "Debian Bookworm"
     value = "debian:bookworm"
-    icon  = "${data.coder_workspace.me.access_url}/icon/debian.svg"
+    icon  = "/icon/debian.svg"
+  }
+
+  option {
+    name  = "Fedora 40"
+    value = "fedora:40"
+    icon  = "/icon/fedora.svg"
   }
 
   option {
     name  = "Golang"
     value = "golang:bookworm"
-    icon  = "https://go.dev/blog/go-brand/Go-Logo/PNG/Go-Logo_Blue.png"
+    icon  = "/icon/go.svg"
   }
 
   option {
     name  = "Node LTS"
     value = "node:lts-bookworm"
-    icon  = "https://seeklogo.com/images/N/nodejs-logo-FBE122E377-seeklogo.com.png"
+    icon  = "/icon/nodejs.svg"
   }
 
   option {
     name  = "Node Current"
     value = "node:current-bookworm"
-    icon  = "https://seeklogo.com/images/N/nodejs-logo-FBE122E377-seeklogo.com.png"
+    icon  = "/icon/nodejs.svg"
   }
 
   option {
     name  = "OpenJDK 22"
-    value = "openjdk:22-bookworm"
-    icon  = "https://www.basis-europe.eu/wp-content/uploads/openjdk_Icon_logo.png"
+    value = "eclipse-temurin:22-jammy"
+    icon  = "/icon/java.svg"
   }
 
   option {
     name  = "PHP"
     value = "php:bookworm"
-    icon  = "https://www.svgrepo.com/show/452088/php.svg"
+    icon  = "/icon/php.svg"
   }
 
   option {
     name  = "Python"
     value = "python:bookworm"
-    icon  = "https://www.svgrepo.com/show/452091/python.svg"
+    icon  = "/icon/python.svg"
   }
 
   option {
     name  = "Ruby"
     value = "ruby:bookworm"
-    icon  = "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Ruby_logo.svg/1200px-Ruby_logo.svg.png"
+    icon  = "/icon/ruby.png"
   }
 }
 
@@ -190,7 +202,7 @@ data "coder_parameter" "custom_base_image" {
   order       = 13
   name        = "Custom base image"
   description = "Overrides selected image above, if needed"
-  icon        = "${data.coder_workspace.me.access_url}/icon/docker.png"
+  icon        = "/icon/docker-white.svg"
   default     = ""
   mutable     = false
 }
@@ -199,19 +211,10 @@ data "coder_parameter" "enable_dind" {
   order       = 15
   name        = "Enable Docker?"
   description = "Enables Docker-in-Docker support, if needed"
-  icon        = "${data.coder_workspace.me.access_url}/icon/docker.png"
+  icon        = "/icon/docker.svg"
   default     = false
   type        = "bool"
   mutable     = false
-}
-
-data "coder_parameter" "github_repo" {
-  order        = 100
-  name         = "github_repo"
-  display_name = "GitHub repo"
-  description  = "GitHub repository to clone, as owner/repository"
-  icon         = "https://static-00.iconduck.com/assets.00/github-icon-512x497-oppthre2.png"
-  mutable      = false
 }
 
 data "coder_parameter" "dotfiles_repo" {
@@ -219,7 +222,7 @@ data "coder_parameter" "dotfiles_repo" {
   name         = "dotfiles_repo"
   display_name = "Dotfiles repo"
   description  = "GitHub repository to download and install dotfiles, if provided."
-  icon         = "${data.coder_workspace.me.access_url}/icon/dotfiles.svg"
+  icon         = "/icon/dotfiles.svg"
   default      = ""
   mutable      = false
 }
@@ -229,13 +232,60 @@ data "coder_parameter" "vault_project" {
   name         = "vault_project"
   display_name = "Vault project name"
   description  = "Name of the project to retrieve and inject environment variables from"
-  # icon        = "${data.coder_workspace.me.access_url}/icon/docker.png"
+  icon        = "/icon/vault.svg"
   default = ""
   mutable = false
 }
 
+data "coder_parameter" "github_repo" {
+  order        = 100
+  name         = "github_repo"
+  display_name = "GitHub repo"
+  description  = "GitHub repository to clone, as owner/repository"
+  icon         = "/icon/github.svg"
+  mutable      = false
+}
+
 data "vault_generic_secret" "dotenv" {
   path = "dotenv/${data.coder_parameter.vault_project.value != "" ? data.coder_parameter.vault_project.value : "_empty"}/dev"
+}
+
+resource "coder_script" "dotfiles" {
+  agent_id = coder_agent.main.id
+  display_name = "Installing dotfiles"
+  icon = "/icon/dotfiles.svg"
+  run_on_start = true
+  start_blocks_login = true
+  script = <<-EOT
+    set -e
+
+    if [ -n "$DOTFILES_URI" ]; then
+      echo "Installing dotfiles from $DOTFILES_URI"
+      coder dotfiles -y "https://github.com/$DOTFILES_URI"
+    fi
+  EOT
+}
+
+resource "coder_script" "github" {
+  agent_id = coder_agent.main.id
+  display_name = "Cloning repository"
+  icon = "/icon/github.svg"
+  run_on_start = true
+  start_blocks_login = true
+  script = <<-EOT
+    set -e
+
+    # Add Github key
+    if [ ! -d ~/.ssh ]; then
+      mkdir -p ~/.ssh && chmod 700 ~/.ssh
+      ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts
+    fi
+
+    # Clone workspace
+    if [ ! -d ~/workspace/.git ]; then
+      git clone https://github.com/${data.coder_parameter.github_repo.value}.git ~/workspace
+    fi
+  EOT
 }
 
 resource "coder_agent" "main" {
@@ -248,23 +298,6 @@ resource "coder_agent" "main" {
     # install and start code-server
     curl -fsSL https://code-server.dev/install.sh | sh -s -- --method=standalone --prefix=/tmp/code-server --version 4.11.0
     /tmp/code-server/bin/code-server --auth none --port 13337 >/tmp/code-server.log 2>&1 &
-
-    # Add Github key
-    if [ ! -d ~/.ssh ]; then
-      mkdir -p ~/.ssh && chmod 700 ~/.ssh
-      ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts
-    fi
-
-    # Install dotfiles
-    if [ -n "$DOTFILES_URI" ]; then
-      echo "Installing dotfiles from $DOTFILES_URI"
-      coder dotfiles -y "https://github.com/$DOTFILES_URI"
-    fi
-
-    # Clone workspace
-    if [ ! -d ~/workspace/.git ]; then
-      git clone https://github.com/${data.coder_parameter.github_repo.value}.git ~/workspace
-    fi
   EOT
 
   env = merge({

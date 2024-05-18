@@ -87,7 +87,7 @@ data "coder_parameter" "size" {
   display_name = "Container size"
   description  = "Amount of resources to dedicate to this container"
   default      = "medium"
-  icon         = "${data.coder_workspace.me.access_url}/icon/memory.svg"
+  icon         = "/icon/memory.svg"
   type         = "string"
   mutable      = false
 
@@ -117,7 +117,7 @@ data "coder_parameter" "github_repo" {
   name         = "github_repo"
   display_name = "GitHub repo"
   description  = "GitHub repository to clone, as owner/repository"
-  icon         = "https://static-00.iconduck.com/assets.00/github-icon-512x497-oppthre2.png"
+  icon         = "/icon/github.svg"
   mutable      = false
 }
 
@@ -126,7 +126,7 @@ data "coder_parameter" "vault_project" {
   name         = "vault_project"
   display_name = "Vault project name"
   description  = "Name of the project to retrieve and inject environment variables from"
-  # icon        = "${data.coder_workspace.me.access_url}/icon/docker.png"
+  icon        = "/icon/vault.svg"
   default = ""
   mutable = false
 }
