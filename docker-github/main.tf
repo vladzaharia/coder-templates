@@ -262,6 +262,7 @@ resource "coder_script" "dotfiles" {
     if [ -n "$DOTFILES_URI" ]; then
       echo "Installing dotfiles from $DOTFILES_URI"
       coder dotfiles -y "https://github.com/$DOTFILES_URI"
+      bash ~/.config/coderv2/dotfiles/bootstrap.sh
     fi
   EOT
 }
