@@ -254,16 +254,13 @@ resource "coder_script" "dotfiles" {
   agent_id = coder_agent.main.id
   display_name = "Installing dotfiles"
   icon = "/icon/dotfiles.svg"
-  run_on_start = true
-  start_blocks_login = true
+  run_on_start = coder_parameter.dotfiles_repo.value != ""
+  start_blocks_login = coder_parameter.dotfiles_repo.value != ""
   script = <<-EOT
     set -e
-
-    if [ -n "$DOTFILES_URI" ]; then
-      echo "Installing dotfiles from $DOTFILES_URI"
-      coder dotfiles -y "https://github.com/$DOTFILES_URI"
-      bash ~/.config/coderv2/dotfiles/bootstrap.sh
-    fi
+    echo "Installing dotfiles from $DOTFILES_URI..."
+    coder dotfiles -y "https://github.com/$DOTFILES_URI"
+    bash ~/.config/coderv2/dotfiles/bootstrap.sh
   EOT
 }
 
@@ -275,17 +272,46 @@ resource "coder_script" "github" {
   start_blocks_login = true
   script = <<-EOT
     set -e
-
     # Add Github key
     if [ ! -d ~/.ssh ]; then
+      echo "Adding Github key to known_hosts..."
       mkdir -p ~/.ssh && chmod 700 ~/.ssh
       ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts
     fi
 
     # Clone workspace
     if [ ! -d ~/workspace/.git ]; then
+      echo "Cloning repository..."
       git clone https://github.com/${data.coder_parameter.github_repo.value}.git ~/workspace
     fi
+  EOT
+}
+
+resource "coder_script" "code_server" {
+  agent_id = coder_agent.main.id
+  display_name = "Installing code-server"
+  icon = "/icon/code.svg"
+  run_on_start = true
+  start_blocks_login = true
+  script = <<-EOT
+    set -e
+    echo "Installing code-server..."
+    curl -fsSL https://code-server.dev/install.sh | sh -s -- --method=standalone --prefix=/tmp/code-server --version 4.11.0
+    /tmp/code-server/bin/code-server --auth none --port 13337 >/tmp/code-server.log 2>&1 &
+  EOT
+}
+
+resource "coder_script" "npm" {
+  agent_id = coder_agent.main.id
+  display_name = "Running NPM install"
+  icon = "/icon/nodejs.svg"
+  run_on_start = strcontains(coder_parameter.base_image.value, "node:")
+  start_blocks_login = strcontains(coder_parameter.base_image.value, "node:")
+  script = <<-EOT
+    set -e
+    echo "Running npm install..."
+    cd ~/workspace
+    npm install
   EOT
 }
 
@@ -293,13 +319,6 @@ resource "coder_agent" "main" {
   arch                   = data.coder_provisioner.me.arch
   os                     = "linux"
   startup_script_timeout = 180
-  startup_script         = <<-EOT
-    set -e
-
-    # install and start code-server
-    curl -fsSL https://code-server.dev/install.sh | sh -s -- --method=standalone --prefix=/tmp/code-server --version 4.11.0
-    /tmp/code-server/bin/code-server --auth none --port 13337 >/tmp/code-server.log 2>&1 &
-  EOT
 
   env = merge({
     GIT_AUTHOR_NAME     = "${data.coder_workspace.me.owner}"
