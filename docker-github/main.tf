@@ -254,8 +254,8 @@ resource "coder_script" "dotfiles" {
   agent_id = coder_agent.main.id
   display_name = "Installing dotfiles"
   icon = "/icon/dotfiles.svg"
-  run_on_start = coder_parameter.dotfiles_repo.value != ""
-  start_blocks_login = coder_parameter.dotfiles_repo.value != ""
+  run_on_start = data.coder_parameter.dotfiles_repo.value != ""
+  start_blocks_login = data.coder_parameter.dotfiles_repo.value != ""
   script = <<-EOT
     set -e
     echo "Installing dotfiles from $DOTFILES_URI..."
@@ -305,8 +305,8 @@ resource "coder_script" "npm" {
   agent_id = coder_agent.main.id
   display_name = "Running NPM install"
   icon = "/icon/nodejs.svg"
-  run_on_start = strcontains(coder_parameter.base_image.value, "node:")
-  start_blocks_login = strcontains(coder_parameter.base_image.value, "node:")
+  run_on_start = strcontains(data.coder_parameter.base_image.value, "node:")
+  start_blocks_login = strcontains(data.coder_parameter.base_image.value, "node:")
   script = <<-EOT
     set -e
     echo "Running npm install..."
