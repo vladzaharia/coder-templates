@@ -269,6 +269,8 @@ resource "coder_script" "npm" {
   agent_id = coder_agent.main.id
   display_name = "Running NPM install"
   icon = "/icon/nodejs.svg"
+
+  cron = !strcontains(data.coder_parameter.base_image.value, "node:") ? "0 6 * * *" : nil
   run_on_start = strcontains(data.coder_parameter.base_image.value, "node:")
   start_blocks_login = strcontains(data.coder_parameter.base_image.value, "node:")
   script = <<-EOT
