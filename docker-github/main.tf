@@ -256,6 +256,7 @@ resource "coder_script" "dotfiles" {
   icon = "/icon/dotfiles.svg"
   run_on_start = data.coder_parameter.dotfiles_repo.value != ""
   start_blocks_login = data.coder_parameter.dotfiles_repo.value != ""
+  cron = !strcontains(data.coder_parameter.base_image.value, "node:") ? "0 6 * * *" : null
   script = <<-EOT
     set -e
     echo "Installing dotfiles from $DOTFILES_URI..."
