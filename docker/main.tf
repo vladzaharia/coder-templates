@@ -244,6 +244,8 @@ resource "coder_script" "dotfiles" {
   agent_id = coder_agent.main.id
   display_name = "Installing dotfiles"
   icon = "/icon/dotfiles.svg"
+
+  cron = data.coder_parameter.dotfiles_repo.value == "" ? "0 6 * * *" : null
   run_on_start = data.coder_parameter.dotfiles_repo.value != ""
   start_blocks_login = data.coder_parameter.dotfiles_repo.value != ""
   script = <<-EOT
