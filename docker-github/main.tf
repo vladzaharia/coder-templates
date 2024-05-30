@@ -256,7 +256,6 @@ resource "coder_script" "dotfiles" {
   icon = "/icon/dotfiles.svg"
   run_on_start = data.coder_parameter.dotfiles_repo.value != ""
   start_blocks_login = data.coder_parameter.dotfiles_repo.value != ""
-  cron = !strcontains(data.coder_parameter.base_image.value, "node:") ? "0 6 * * *" : null
   script = <<-EOT
     set -e
     echo "Installing dotfiles from $DOTFILES_URI..."
@@ -308,6 +307,7 @@ resource "coder_script" "npm" {
   icon = "/icon/nodejs.svg"
   run_on_start = strcontains(data.coder_parameter.base_image.value, "node:")
   start_blocks_login = strcontains(data.coder_parameter.base_image.value, "node:")
+  cron = !strcontains(data.coder_parameter.base_image.value, "node:") ? "0 6 * * *" : null
   script = <<-EOT
     set -e
     echo "Running npm install..."
