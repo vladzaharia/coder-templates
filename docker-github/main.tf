@@ -365,12 +365,23 @@ resource "coder_app" "code-server" {
   icon         = "/icon/code.svg"
   subdomain    = false
   share        = "owner"
+  order        = 0
 
   healthcheck {
     url       = "http://localhost:13337/healthz"
     interval  = 5
     threshold = 6
   }
+}
+
+resource "coder_app" "blink" {
+  agent_id     = coder_agent.main.id
+  slug         = "blink"
+  display_name = "Blink Shell"
+  url          = "blinkshell://run?key=12BA15&cmd=code ${data.coder_workspace.me.access_url}/@${data.coder_workspace.me.owner}/${data.coder_workspace.me.name}.main/apps/code-server/"
+  icon         = "https://assets.polaris.rest/Logos/blink_alt.svg"
+  external     = true
+  order        = 50
 }
 
 resource "docker_volume" "home_volume" {
