@@ -1,5 +1,15 @@
 {
     "recommendations": [
-        "hashicorp.terraform"
+        "hashicorp.terraform",
+        "redhat.vscode-yaml",
+        "ms-azuretools.vscode-docker",
+        "DavidAnson.vscode-markdownlint",
+        
+        "PKief.material-icon-theme",
+        "RobbOwen.synthwave-vscode",
+
+        "eamodio.gitlens",
+        "GitHub.vscode-pull-request-github",
+        "stkb.rewrap"
     ]
 }
