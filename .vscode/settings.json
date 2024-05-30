@@ -4,6 +4,9 @@
     "workbench.preferredLightColorTheme": "Quiet Light",
     "workbench.iconTheme": "material-icon-theme",
 
+    "editor.fontFamily": "'MonoLisa Nerd Font', MonoLisa, Menlo, Monaco, 'Courier New', monospace",
+
     "git.enableSmartCommit": true,
     "git.autofetch": true,
+    "git.confirmSync": false,
 }
