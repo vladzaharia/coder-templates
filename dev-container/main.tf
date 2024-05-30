@@ -51,7 +51,7 @@ provider "vault" {
 }
 
 locals {
-  username = data.coder_workspace_owner.name
+  username = data.coder_workspace_owner.me.name
   size_mapping = {
     small = {
       cores  = "0"
@@ -141,8 +141,7 @@ data "vault_generic_secret" "dotenv" {
 resource "coder_agent" "main" {
   arch                   = data.coder_provisioner.me.arch
   os                     = "linux"
-  startup_script_timeout = 180
-  startup_script         = <<-EOT
+    startup_script         = <<-EOT
     set -e
 
     # install and start code-server
@@ -247,7 +246,7 @@ resource "docker_container" "workspace" {
   count = data.coder_workspace.main.start_count
   image = "ghcr.io/coder/envbuilder:0.2.1"
   # Uses lower() to avoid Docker restriction on container names.
-  name = "coder-${data.coder_workspace_owner.name}-${lower(data.coder_workspace.main.name)}"
+  name = "coder-${data.coder_workspace_owner.me.name}-${lower(data.coder_workspace.main.name)}"
   # Hostname makes the shell more user friendly: coder@my-workspace:~$
   hostname = data.coder_workspace.main.name
   # Use the docker gateway if the access URL is 127.0.0.1
@@ -274,11 +273,11 @@ resource "docker_container" "workspace" {
   # Add labels in Docker to keep track of orphan resources.
   labels {
     label = "coder.owner"
-    value = data.coder_workspace_owner.name
+    value = data.coder_workspace_owner.me.name
   }
   labels {
     label = "coder.owner_id"
-    value = data.coder_workspace_owner.id
+    value = data.coder_workspace_owner.me.id
   }
   labels {
     label = "coder.workspace_id"

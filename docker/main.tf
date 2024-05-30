@@ -51,7 +51,7 @@ provider "vault" {
 }
 
 locals {
-  username = coder_workspace_owner.me.owner.name
+  username = coder_workspace_owner.me.name
   size_mapping = {
     small = {
       cores  = "0"
@@ -287,8 +287,7 @@ resource "coder_script" "npm" {
 resource "coder_agent" "main" {
   arch                   = data.coder_provisioner.me.arch
   os                     = "linux"
-  startup_script_timeout = 180
-  startup_script         = <<-EOT
+    startup_script         = <<-EOT
     set -e
 
     # install and start code-server
@@ -353,7 +352,7 @@ resource "coder_app" "blink" {
   agent_id     = coder_agent.main.id
   slug         = "blink"
   display_name = "Blink Shell"
-  url          = "blinkshell://run?key=12BA15&cmd=code ${data.coder_workspace.main.access_url}/@${coder_workspace_owner.me.owner.name}/${data.coder_workspace.main.name}.main/apps/code-server/"
+  url          = "blinkshell://run?key=12BA15&cmd=code ${data.coder_workspace.main.access_url}/@${coder_workspace_owner.me.name}/${data.coder_workspace.main.name}.main/apps/code-server/"
   icon         = "https://assets.polaris.rest/Logos/blink_alt.svg"
   external     = true
   order        = 50
@@ -368,11 +367,11 @@ resource "docker_volume" "home_volume" {
   # Add labels in Docker to keep track of orphan resources.
   labels {
     label = "coder.owner"
-    value = coder_workspace_owner.me.owner.name
+    value = coder_workspace_owner.me.name
   }
   labels {
     label = "coder.owner_id"
-    value = coder_workspace_owner.me.owner.id
+    value = coder_workspace_owner.me.id
   }
   labels {
     label = "coder.workspace_id"
@@ -446,7 +445,7 @@ resource "docker_container" "workspace" {
   count = data.coder_workspace.main.start_count
   image = docker_image.main.name
   # Uses lower() to avoid Docker restriction on container names.
-  name = "coder-${coder_workspace_owner.me.owner.name}-${lower(data.coder_workspace.main.name)}"
+  name = "coder-${coder_workspace_owner.me.name}-${lower(data.coder_workspace.main.name)}"
   # Hostname makes the shell more user friendly: coder@my-workspace:~$
   hostname = data.coder_workspace.main.name
   # Use the docker gateway if the access URL is 127.0.0.1
@@ -480,11 +479,11 @@ resource "docker_container" "workspace" {
   # Add labels in Docker to keep track of orphan resources.
   labels {
     label = "coder.owner"
-    value = coder_workspace_owner.me.owner.name
+    value = coder_workspace_owner.me.name
   }
   labels {
     label = "coder.owner_id"
-    value = coder_workspace_owner.me.owner.id
+    value = coder_workspace_owner.me.id
   }
   labels {
     label = "coder.workspace_id"

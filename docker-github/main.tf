@@ -322,8 +322,7 @@ resource "coder_script" "npm" {
 resource "coder_agent" "main" {
   arch                   = data.coder_provisioner.me.arch
   os                     = "linux"
-  startup_script_timeout = 180
-
+  
   env = merge({
     GIT_AUTHOR_NAME     = "${data.coder_workspace_owner.me.full_name}"
     GIT_COMMITTER_NAME  = "${data.coder_workspace_owner.me.full_name}"
