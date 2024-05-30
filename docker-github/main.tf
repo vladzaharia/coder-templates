@@ -72,7 +72,7 @@ locals {
   }
 }
 
-data "coder_git_auth" "github" {
+data "coder_external_auth" "github" {
   id = "github"
 }
 
@@ -328,7 +328,7 @@ resource "coder_agent" "main" {
     GIT_COMMITTER_NAME  = "${data.coder_workspace_owner.me.full_name}"
     GIT_AUTHOR_EMAIL    = "${data.coder_workspace_owner.me.email}"
     GIT_COMMITTER_EMAIL = "${data.coder_workspace_owner.me.email}"
-    GITHUB_TOKEN        = "${data.coder_git_auth.github.access_token}"
+    GITHUB_TOKEN        = "${data.coder_external_auth.github.access_token}"
     "DOTFILES_URI"      = data.coder_parameter.dotfiles_repo.value != "" ? data.coder_parameter.dotfiles_repo.value : null
   }, data.vault_generic_secret.dotenv.data)
 
