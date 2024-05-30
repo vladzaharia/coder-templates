@@ -51,7 +51,7 @@ provider "vault" {
 }
 
 locals {
-  username = data.coder_workspace.me.owner
+  username = coder_workspace_owner.me.owner.name
   size_mapping = {
     small = {
       cores  = "0"
@@ -78,7 +78,10 @@ data "coder_provisioner" "me" {
 provider "docker" {
 }
 
-data "coder_workspace" "me" {
+data "coder_workspace" "main" {
+}
+
+data "coder_workspace_owner" "me" {
 }
 
 data "coder_parameter" "size" {
@@ -294,10 +297,10 @@ resource "coder_agent" "main" {
   EOT
 
   env = merge({
-    GIT_AUTHOR_NAME     = "${data.coder_workspace.me.owner}"
-    GIT_COMMITTER_NAME  = "${data.coder_workspace.me.owner}"
-    GIT_AUTHOR_EMAIL    = "${data.coder_workspace.me.owner_email}"
-    GIT_COMMITTER_EMAIL = "${data.coder_workspace.me.owner_email}"
+    GIT_AUTHOR_NAME     = "${data.coder_workspace_owner.me.full_name}"
+    GIT_COMMITTER_NAME  = "${data.coder_workspace_owner.me.full_name}"
+    GIT_AUTHOR_EMAIL    = "${data.coder_workspace_owner.me.email}"
+    GIT_COMMITTER_EMAIL = "${data.coder_workspace_owner.me.email}"
     "DOTFILES_URI"      = data.coder_parameter.dotfiles_repo.value != "" ? data.coder_parameter.dotfiles_repo.value : null
 
   }, data.vault_generic_secret.dotenv.data)
@@ -350,14 +353,14 @@ resource "coder_app" "blink" {
   agent_id     = coder_agent.main.id
   slug         = "blink"
   display_name = "Blink Shell"
-  url          = "blinkshell://run?key=12BA15&cmd=code ${data.coder_workspace.me.access_url}/@${data.coder_workspace.me.owner}/${data.coder_workspace.me.name}.main/apps/code-server/"
+  url          = "blinkshell://run?key=12BA15&cmd=code ${data.coder_workspace.main.access_url}/@${coder_workspace_owner.me.owner.name}/${data.coder_workspace.main.name}.main/apps/code-server/"
   icon         = "https://assets.polaris.rest/Logos/blink_alt.svg"
   external     = true
   order        = 50
 }
 
 resource "docker_volume" "home_volume" {
-  name = "coder-${data.coder_workspace.me.id}-home"
+  name = "coder-${data.coder_workspace.main.id}-home"
   # Protect the volume from being deleted due to changes in attributes.
   lifecycle {
     ignore_changes = all
@@ -365,21 +368,21 @@ resource "docker_volume" "home_volume" {
   # Add labels in Docker to keep track of orphan resources.
   labels {
     label = "coder.owner"
-    value = data.coder_workspace.me.owner
+    value = coder_workspace_owner.me.owner.name
   }
   labels {
     label = "coder.owner_id"
-    value = data.coder_workspace.me.owner_id
+    value = coder_workspace_owner.me.owner.id
   }
   labels {
     label = "coder.workspace_id"
-    value = data.coder_workspace.me.id
+    value = data.coder_workspace.main.id
   }
   # This field becomes outdated if the workspace is renamed but can
   # be useful for debugging or cleaning out dangling volumes.
   labels {
     label = "coder.workspace_name_at_creation"
-    value = data.coder_workspace.me.name
+    value = data.coder_workspace.main.name
   }
 }
 
@@ -392,7 +395,7 @@ resource "coder_metadata" "home_volume" {
 }
 
 resource "docker_image" "main" {
-  name = "coder-${data.coder_workspace.me.id}"
+  name = "coder-${data.coder_workspace.main.id}"
   build {
     context = "./build"
     build_args = {
@@ -415,7 +418,7 @@ resource "coder_metadata" "main_image" {
 }
 
 resource "docker_network" "dind_network" {
-  name  = "network-${data.coder_workspace.me.id}"
+  name  = "network-${data.coder_workspace.main.id}"
   count = data.coder_parameter.enable_dind.value ? 1 : 0
 }
 
@@ -431,7 +434,7 @@ resource "coder_metadata" "dind_network" {
 resource "docker_container" "dind" {
   image      = "docker:dind"
   privileged = true
-  name       = "dind-${data.coder_workspace.me.id}"
+  name       = "dind-${data.coder_workspace.main.id}"
   entrypoint = ["dockerd", "-H", "tcp://0.0.0.0:2375"]
   networks_advanced {
     name = docker_network.dind_network[0].name
@@ -440,12 +443,12 @@ resource "docker_container" "dind" {
 }
 
 resource "docker_container" "workspace" {
-  count = data.coder_workspace.me.start_count
+  count = data.coder_workspace.main.start_count
   image = docker_image.main.name
   # Uses lower() to avoid Docker restriction on container names.
-  name = "coder-${data.coder_workspace.me.owner}-${lower(data.coder_workspace.me.name)}"
+  name = "coder-${coder_workspace_owner.me.owner.name}-${lower(data.coder_workspace.main.name)}"
   # Hostname makes the shell more user friendly: coder@my-workspace:~$
-  hostname = data.coder_workspace.me.name
+  hostname = data.coder_workspace.main.name
   # Use the docker gateway if the access URL is 127.0.0.1
   entrypoint = ["sh", "-c", replace(coder_agent.main.init_script, "/localhost|127\\.0\\.0\\.1/", "host.docker.internal")]
   env = [
@@ -477,18 +480,18 @@ resource "docker_container" "workspace" {
   # Add labels in Docker to keep track of orphan resources.
   labels {
     label = "coder.owner"
-    value = data.coder_workspace.me.owner
+    value = coder_workspace_owner.me.owner.name
   }
   labels {
     label = "coder.owner_id"
-    value = data.coder_workspace.me.owner_id
+    value = coder_workspace_owner.me.owner.id
   }
   labels {
     label = "coder.workspace_id"
-    value = data.coder_workspace.me.id
+    value = data.coder_workspace.main.id
   }
   labels {
     label = "coder.workspace_name"
-    value = data.coder_workspace.me.name
+    value = data.coder_workspace.main.name
   }
 }

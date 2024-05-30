@@ -51,7 +51,7 @@ provider "vault" {
 }
 
 locals {
-  username = data.coder_workspace.me.owner
+  username = data.coder_workspace_owner.name
   size_mapping = {
     small = {
       cores  = "0"
@@ -78,7 +78,10 @@ data "coder_provisioner" "me" {
 provider "docker" {
 }
 
-data "coder_workspace" "me" {
+data "coder_workspace" "main" {
+}
+
+data "coder_workspace_owner" "me" {
 }
 
 data "coder_parameter" "size" {
@@ -153,10 +156,10 @@ resource "coder_agent" "main" {
   EOT
 
   env = merge({
-    GIT_AUTHOR_NAME     = "${data.coder_workspace.me.owner}"
-    GIT_COMMITTER_NAME  = "${data.coder_workspace.me.owner}"
-    GIT_AUTHOR_EMAIL    = "${data.coder_workspace.me.owner_email}"
-    GIT_COMMITTER_EMAIL = "${data.coder_workspace.me.owner_email}"
+    GIT_AUTHOR_NAME     = "${data.coder_workspace_owner.me.full_name}"
+    GIT_COMMITTER_NAME  = "${data.coder_workspace_owner.me.full_name}"
+    GIT_AUTHOR_EMAIL    = "${data.coder_workspace_owner.me.email}"
+    GIT_COMMITTER_EMAIL = "${data.coder_workspace_owner.me.email}"
   }, data.vault_generic_secret.dotenv.data)
 
   metadata {
@@ -207,14 +210,14 @@ resource "coder_app" "blink" {
   agent_id     = coder_agent.main.id
   slug         = "blink"
   display_name = "Blink Shell"
-  url          = "blinkshell://run?key=12BA15&cmd=code ${data.coder_workspace.me.access_url}/@${data.coder_workspace.me.owner}/${data.coder_workspace.me.name}.main/apps/code-server/"
+  url          = "blinkshell://run?key=12BA15&cmd=code ${data.coder_workspace.main.access_url}/@${data.coder_workspace_owner.me.name}/${data.coder_workspace.main.name}.main/apps/code-server/"
   icon         = "https://assets.polaris.rest/Logos/blink_alt.svg"
   external     = true
   order        = 50
 }
 
 resource "docker_volume" "workspaces" {
-  name = "coder-${data.coder_workspace.me.id}-workspaces"
+  name = "coder-${data.coder_workspace.main.id}-workspaces"
   # Protect the volume from being deleted due to changes in attributes.
   lifecycle {
     ignore_changes = all
@@ -222,35 +225,35 @@ resource "docker_volume" "workspaces" {
   # Add labels in Docker to keep track of orphan resources.
   labels {
     label = "coder.owner"
-    value = data.coder_workspace.me.owner
+    value = data.coder_workspace_owner.me.name
   }
   labels {
     label = "coder.owner_id"
-    value = data.coder_workspace.me.owner_id
+    value = data.coder_workspace_owner.me.id
   }
   labels {
     label = "coder.workspace_id"
-    value = data.coder_workspace.me.id
+    value = data.coder_workspace.main.id
   }
   # This field becomes outdated if the workspace is renamed but can
   # be useful for debugging or cleaning out dangling volumes.
   labels {
     label = "coder.workspace_name_at_creation"
-    value = data.coder_workspace.me.name
+    value = data.coder_workspace.main.name
   }
 }
 
 resource "docker_container" "workspace" {
-  count = data.coder_workspace.me.start_count
+  count = data.coder_workspace.main.start_count
   image = "ghcr.io/coder/envbuilder:0.2.1"
   # Uses lower() to avoid Docker restriction on container names.
-  name = "coder-${data.coder_workspace.me.owner}-${lower(data.coder_workspace.me.name)}"
+  name = "coder-${data.coder_workspace_owner.name}-${lower(data.coder_workspace.main.name)}"
   # Hostname makes the shell more user friendly: coder@my-workspace:~$
-  hostname = data.coder_workspace.me.name
+  hostname = data.coder_workspace.main.name
   # Use the docker gateway if the access URL is 127.0.0.1
   env = concat([
     "CODER_AGENT_TOKEN=${coder_agent.main.token}",
-    "CODER_AGENT_URL=${replace(data.coder_workspace.me.access_url, "/localhost|127\\.0\\.0\\.1/", "host.docker.internal")}",
+    "CODER_AGENT_URL=${replace(data.coder_workspace.main.access_url, "/localhost|127\\.0\\.0\\.1/", "host.docker.internal")}",
     "GIT_URL=https://github.com/${data.coder_parameter.github_repo.value}.git",
     "INIT_SCRIPT=${replace(coder_agent.main.init_script, "/localhost|127\\.0\\.0\\.1/", "host.docker.internal")}",
     "FALLBACK_IMAGE=ubuntu:latest"
@@ -271,18 +274,18 @@ resource "docker_container" "workspace" {
   # Add labels in Docker to keep track of orphan resources.
   labels {
     label = "coder.owner"
-    value = data.coder_workspace.me.owner
+    value = data.coder_workspace_owner.name
   }
   labels {
     label = "coder.owner_id"
-    value = data.coder_workspace.me.owner_id
+    value = data.coder_workspace_owner.id
   }
   labels {
     label = "coder.workspace_id"
-    value = data.coder_workspace.me.id
+    value = data.coder_workspace.main.id
   }
   labels {
     label = "coder.workspace_name"
-    value = data.coder_workspace.me.name
+    value = data.coder_workspace.main.name
   }
 }
