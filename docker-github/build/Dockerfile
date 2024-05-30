@@ -37,7 +37,7 @@ RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/h
 RUN apt-get update \
 	&& apt-get install -y \
 	terraform \
-	vault \
+	vault
 
 # Clean up apt
 RUN rm -rf /var/lib/apt/lists/*
