@@ -10,6 +10,7 @@ RUN apt-get update \
 	gpg \
 	golang \
 	jq \
+	just \
 	lsb-release \
 	make \
 	sudo \
