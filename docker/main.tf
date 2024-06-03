@@ -254,37 +254,46 @@ module "git-commit-signing" {
   agent_id = coder_agent.main.id
 }
 
-module "code-server" {
-  source   = "registry.coder.com/modules/code-server/coder"
+module "dotfiles" {
+  source   = "registry.coder.com/modules/dotfiles/coder"
   version  = "1.0.14"
-  display_name = "VS Code in Browser"
   agent_id = coder_agent.main.id
+  dotfiles_uri = data.coder_parameter.dotfiles_uri.value
+}
+
+module "code-server" {
+  source                  = "registry.coder.com/modules/code-server/coder"
+  version                 = "1.0.14"
+  display_name            = "VS Code in Browser"
+  order                   = 10
+  agent_id                = coder_agent.main.id
   auto_install_extensions = true
-  folder = "/home/${local.username}"
+  folder                  = "/home/${local.username}"
   settings = {
     "workbench.activityBar.location" = "top",
-    "editor.fontFamily" = "'MonoLisa Nerd Font', MonoLisa, Menlo, Monaco, 'Courier New', monospace",
-    "workbench.iconTheme" = "material-icon-theme",
-    "git.enableSmartCommit" = true,
-    "git.autofetch" = true,
-    "git.confirmSync" = false,
+    "editor.fontFamily"              = "'MonoLisa Nerd Font', MonoLisa, Menlo, Monaco, 'Courier New', monospace",
+    "workbench.iconTheme"            = "material-icon-theme",
+    "git.enableSmartCommit"          = true,
+    "git.autofetch"                  = true,
+    "git.confirmSync"                = false,
   }
 }
 
 module "vscode-web" {
-  source         = "registry.coder.com/modules/vscode-web/coder"
-  version        = "1.0.14"
-  agent_id       = coder_agent.main.id
-  accept_license = true
+  source                  = "registry.coder.com/modules/vscode-web/coder"
+  version                 = "1.0.14"
+  order                   = 25
+  agent_id                = coder_agent.main.id
+  accept_license          = true
   auto_install_extensions = true
-  folder = "/home/${local.username}"
+  folder                  = "/home/${local.username}"
   settings = {
     "workbench.activityBar.location" = "top",
-    "editor.fontFamily" = "'MonoLisa Nerd Font', MonoLisa, Menlo, Monaco, 'Courier New', monospace",
-    "workbench.iconTheme" = "material-icon-theme",
-    "git.enableSmartCommit" = true,
-    "git.autofetch" = true,
-    "git.confirmSync" = false,
+    "editor.fontFamily"              = "'MonoLisa Nerd Font', MonoLisa, Menlo, Monaco, 'Courier New', monospace",
+    "workbench.iconTheme"            = "material-icon-theme",
+    "git.enableSmartCommit"          = true,
+    "git.autofetch"                  = true,
+    "git.confirmSync"                = false,
   }
 }
 
@@ -311,8 +320,8 @@ module "coder-login" {
 }
 
 resource "coder_agent" "main" {
-  arch           = data.coder_provisioner.me.arch
-  os             = "linux"
+  arch = data.coder_provisioner.me.arch
+  os   = "linux"
   env = merge({
     GIT_AUTHOR_NAME     = "${data.coder_workspace_owner.me.full_name}"
     GIT_COMMITTER_NAME  = "${data.coder_workspace_owner.me.full_name}"
