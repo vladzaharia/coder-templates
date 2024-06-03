@@ -284,7 +284,7 @@ module "dotfiles" {
 module "code-server" {
   source                  = "registry.coder.com/modules/code-server/coder"
   version                 = "1.0.14"
-  display_name            = "VS Code in Browser"
+  display_name            = "VS Code Server"
   order                   = 10
   agent_id                = coder_agent.main.id
   auto_install_extensions = true
