@@ -155,18 +155,10 @@ module "git-commit-signing" {
 module "code-server" {
   source   = "registry.coder.com/modules/code-server/coder"
   version  = "1.0.14"
+  display_name = "VS Code in Browser"
   agent_id = coder_agent.main.id
   auto_install_extensions = true
   folder = "/home/${local.username}/workspace"
-  extensions = [
-    "redhat.vscode-yaml",
-    "ms-azuretools.vscode-docker",
-    "DavidAnson.vscode-markdownlint",
-    "PKief.material-icon-theme",
-    "eamodio.gitlens",
-    "GitHub.vscode-pull-request-github",
-    "stkb.rewrap"
-  ]
   settings = {
     "workbench.activityBar.location" = "top",
     "editor.fontFamily" = "'MonoLisa Nerd Font', MonoLisa, Menlo, Monaco, 'Courier New', monospace",
@@ -184,15 +176,6 @@ module "vscode-web" {
   accept_license = true
   auto_install_extensions = true
   folder = "/home/${local.username}/workspace"
-  extensions = [
-    "redhat.vscode-yaml",
-    "ms-azuretools.vscode-docker",
-    "DavidAnson.vscode-markdownlint",
-    "PKief.material-icon-theme",
-    "eamodio.gitlens",
-    "GitHub.vscode-pull-request-github",
-    "stkb.rewrap"
-  ]
   settings = {
     "workbench.activityBar.location" = "top",
     "editor.fontFamily" = "'MonoLisa Nerd Font', MonoLisa, Menlo, Monaco, 'Courier New', monospace",
