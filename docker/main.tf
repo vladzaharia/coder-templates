@@ -360,14 +360,6 @@ module "coder-login" {
 resource "coder_agent" "main" {
   arch           = data.coder_provisioner.me.arch
   os             = "linux"
-  startup_script = <<-EOT
-    set -e
-
-    # install and start code-server
-    curl -fsSL https://code-server.dev/install.sh | sh -s -- --method=standalone --prefix=/tmp/code-server
-    /tmp/code-server/bin/code-server --auth none --port 13337 >/tmp/code-server.log 2>&1 &
-  EOT
-
   env = merge({
     GIT_AUTHOR_NAME     = "${data.coder_workspace_owner.me.full_name}"
     GIT_COMMITTER_NAME  = "${data.coder_workspace_owner.me.full_name}"
@@ -404,22 +396,22 @@ resource "coder_agent" "main" {
   }
 }
 
-resource "coder_app" "code-server" {
-  agent_id     = coder_agent.main.id
-  slug         = "code-server"
-  display_name = "VS Code in Browser"
-  url          = "http://localhost:13337/?folder=/home/${local.username}"
-  icon         = "/icon/code.svg"
-  subdomain    = false
-  share        = "owner"
-  order        = 0
+# resource "coder_app" "code-server" {
+#   agent_id     = coder_agent.main.id
+#   slug         = "code-server"
+#   display_name = "VS Code in Browser"
+#   url          = "http://localhost:13337/?folder=/home/${local.username}"
+#   icon         = "/icon/code.svg"
+#   subdomain    = false
+#   share        = "owner"
+#   order        = 0
 
-  healthcheck {
-    url       = "http://localhost:13337/healthz"
-    interval  = 5
-    threshold = 6
-  }
-}
+#   healthcheck {
+#     url       = "http://localhost:13337/healthz"
+#     interval  = 5
+#     threshold = 6
+#   }
+# }
 
 resource "coder_app" "blink" {
   agent_id     = coder_agent.main.id
