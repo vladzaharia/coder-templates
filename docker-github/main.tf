@@ -439,22 +439,22 @@ resource "coder_agent" "main" {
   }
 }
 
-resource "coder_app" "code-server" {
-  agent_id     = coder_agent.main.id
-  slug         = "code-server"
-  display_name = "VS Code in Browser"
-  url          = "http://localhost:13337/?folder=/home/${local.username}/workspace"
-  icon         = "/icon/code.svg"
-  subdomain    = false
-  share        = "owner"
-  order        = 0
+# resource "coder_app" "code-server" {
+#   agent_id     = coder_agent.main.id
+#   slug         = "code-server"
+#   display_name = "VS Code in Browser"
+#   url          = "http://localhost:13337/?folder=/home/${local.username}/workspace"
+#   icon         = "/icon/code.svg"
+#   subdomain    = false
+#   share        = "owner"
+#   order        = 0
 
-  healthcheck {
-    url       = "http://localhost:13337/healthz"
-    interval  = 5
-    threshold = 6
-  }
-}
+#   healthcheck {
+#     url       = "http://localhost:13337/healthz"
+#     interval  = 5
+#     threshold = 6
+#   }
+# }
 
 resource "coder_app" "blink" {
   agent_id     = coder_agent.main.id
