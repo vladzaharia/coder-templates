@@ -203,6 +203,12 @@ module "vscode-web" {
   }
 }
 
+module "coder-login" {
+  source   = "registry.coder.com/modules/coder-login/coder"
+  version  = "1.0.2"
+  agent_id = coder_agent.main.id
+}
+
 resource "coder_agent" "main" {
   arch           = data.coder_provisioner.me.arch
   os             = "linux"
