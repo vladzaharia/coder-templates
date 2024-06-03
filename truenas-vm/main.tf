@@ -146,7 +146,7 @@ resource "coder_agent" "main" {
 resource "coder_app" "code-server" {
   agent_id     = coder_agent.main.id
   slug         = "code-server"
-  display_name = "VS Code in Browser"
+  display_name = "VS Code Server"
   url          = "http://localhost:13337/?folder=/home/${local.username}/workspace"
   icon         = "/icon/code.svg"
   subdomain    = false
