@@ -38,6 +38,9 @@ RUN apt-get update \
 	terraform \
 	vault
 
+# Install code-server
+RUN curl -fsSL https://code-server.dev/install.sh | sh
+
 # Clean up apt
 RUN rm -rf /var/lib/apt/lists/*
 
@@ -48,3 +51,6 @@ RUN useradd --groups sudo --no-create-home --shell /bin/zsh ${USER} \
 	&& chmod 0440 /etc/sudoers.d/${USER}
 USER ${USER}
 WORKDIR /home/${USER}
+
+# pre-install VS Code extensions
+RUN code-server --install-extension eamodio.gitlens 

@@ -1,8 +1,9 @@
 {
-    "workbench.colorTheme": "SynthWave '84",
-    "workbench.preferredDarkColorTheme": "SynthWave '84",
+    "workbench.colorTheme": "Bearded Theme Surprising Blueberry",
+    "workbench.preferredDarkColorTheme": "Bearded Theme Surprising Blueberry",
     "workbench.preferredLightColorTheme": "Quiet Light",
     "workbench.iconTheme": "material-icon-theme",
+    "workbench.activityBar.location": "top",
 
     "editor.fontFamily": "'MonoLisa Nerd Font', MonoLisa, Menlo, Monaco, 'Courier New', monospace",
 

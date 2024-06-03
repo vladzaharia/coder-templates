@@ -129,24 +129,91 @@ data "coder_parameter" "vault_project" {
   name         = "vault_project"
   display_name = "Vault project name"
   description  = "Name of the project to retrieve and inject environment variables from"
-  icon        = "/icon/vault.svg"
-  default = ""
-  mutable = false
+  icon         = "/icon/vault.svg"
+  default      = ""
+  mutable      = false
 }
 
 data "vault_generic_secret" "dotenv" {
   path = "dotenv/${data.coder_parameter.vault_project.value != "" ? data.coder_parameter.vault_project.value : "_empty"}/dev"
 }
 
-resource "coder_agent" "main" {
-  arch                   = data.coder_provisioner.me.arch
-  os                     = "linux"
-    startup_script         = <<-EOT
-    set -e
+module "git-config" {
+  source                = "registry.coder.com/modules/git-config/coder"
+  version               = "1.0.12"
+  agent_id              = coder_agent.main.id
+  allow_username_change = false
+  allow_email_change    = false
+}
 
-    # install and start code-server
-    curl -fsSL https://code-server.dev/install.sh | sh -s -- --method=standalone --prefix=/tmp/code-server --version 4.11.0
-    /tmp/code-server/bin/code-server --auth none --port 13337 >/tmp/code-server.log 2>&1 &
+module "git-commit-signing" {
+  source   = "registry.coder.com/modules/git-commit-signing/coder"
+  version  = "1.0.11"
+  agent_id = coder_agent.main.id
+}
+
+module "code-server" {
+  source   = "registry.coder.com/modules/code-server/coder"
+  version  = "1.0.14"
+  agent_id = coder_agent.main.id
+  auto_install_extensions = true
+  folder = "/home/${local.username}/workspace"
+  extensions = [
+    "redhat.vscode-yaml",
+    "ms-azuretools.vscode-docker",
+    "DavidAnson.vscode-markdownlint",
+    "PKief.material-icon-theme",
+    "eamodio.gitlens",
+    "GitHub.vscode-pull-request-github",
+    "stkb.rewrap"
+  ]
+  settings = {
+    "workbench.activityBar.location" = "top",
+    "editor.fontFamily" = "'MonoLisa Nerd Font', MonoLisa, Menlo, Monaco, 'Courier New', monospace",
+    "workbench.iconTheme" = "material-icon-theme",
+    "git.enableSmartCommit" = true,
+    "git.autofetch" = true,
+    "git.confirmSync" = false,
+  }
+}
+
+module "vscode-web" {
+  source         = "registry.coder.com/modules/vscode-web/coder"
+  version        = "1.0.14"
+  agent_id       = coder_agent.main.id
+  accept_license = true
+  auto_install_extensions = true
+  folder = "/home/${local.username}/workspace"
+  extensions = [
+    "redhat.vscode-yaml",
+    "ms-azuretools.vscode-docker",
+    "DavidAnson.vscode-markdownlint",
+    "PKief.material-icon-theme",
+    "eamodio.gitlens",
+    "GitHub.vscode-pull-request-github",
+    "stkb.rewrap"
+  ]
+  settings = {
+    "workbench.activityBar.location" = "top",
+    "editor.fontFamily" = "'MonoLisa Nerd Font', MonoLisa, Menlo, Monaco, 'Courier New', monospace",
+    "workbench.iconTheme" = "material-icon-theme",
+    "git.enableSmartCommit" = true,
+    "git.autofetch" = true,
+    "git.confirmSync" = false,
+  }
+}
+
+module "coder-login" {
+  source   = "registry.coder.com/modules/coder-login/coder"
+  version  = "1.0.2"
+  agent_id = coder_agent.main.id
+}
+
+resource "coder_agent" "main" {
+  arch           = data.coder_provisioner.me.arch
+  os             = "linux"
+  startup_script = <<-EOT
+    set -e
 
     if [ ! -d ~/.ssh ]; then
       mkdir -p ~/.ssh && chmod 700 ~/.ssh
@@ -188,23 +255,6 @@ resource "coder_agent" "main" {
   }
 }
 
-resource "coder_app" "code-server" {
-  agent_id     = coder_agent.main.id
-  slug         = "code-server"
-  display_name = "VS Code in Browser"
-  url          = "http://localhost:13337/?folder=/home/${local.username}/workspace"
-  icon         = "/icon/code.svg"
-  subdomain    = false
-  share        = "owner"
-  order        = 0
-
-  healthcheck {
-    url       = "http://localhost:13337/healthz"
-    interval  = 5
-    threshold = 6
-  }
-}
-
 resource "coder_app" "blink" {
   agent_id     = coder_agent.main.id
   slug         = "blink"
@@ -242,9 +292,17 @@ resource "docker_volume" "workspaces" {
   }
 }
 
+resource "docker_volume" "image_cache" {
+  name = "coder-image-cache"
+  lifecycle {
+    ignore_changes  = all
+    prevent_destroy = true
+  }
+}
+
 resource "docker_container" "workspace" {
   count = data.coder_workspace.main.start_count
-  image = "ghcr.io/coder/envbuilder:0.2.1"
+  image = "ghcr.io/coder/envbuilder:0.2.9"
   # Uses lower() to avoid Docker restriction on container names.
   name = "coder-${data.coder_workspace_owner.me.name}-${lower(data.coder_workspace.main.name)}"
   # Hostname makes the shell more user friendly: coder@my-workspace:~$
@@ -269,6 +327,12 @@ resource "docker_container" "workspace" {
     container_path = "/workspaces"
     volume_name    = docker_volume.workspaces.name
     read_only      = false
+  }
+
+  volumes {
+    container_path = "/cache"
+    volume_name    = docker_volume.image_cache.name
+    read_only      = true
   }
   # Add labels in Docker to keep track of orphan resources.
   labels {

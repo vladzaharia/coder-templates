@@ -97,6 +97,7 @@ jobs:
       - name: Push template
         run: |
             ./coder templates push $CODER_TEMPLATE_NAME --directory $CODER_TEMPLATE_DIR --yes --name=$CODER_TEMPLATE_VERSION --message="$CODER_TEMPLATE_MESSAGE" --variable vault_role_id="$VAULT_ROLE_ID" --variable vault_secret_id="$VAULT_SECRET_ID"
+        if: ${{ !startsWith(matrix.template, '.') }}
         env:
             CODER_URL: https://code.polaris.rest
             CODER_SESSION_TOKEN: ${{ env.CODER_SESSION_TOKEN }}
