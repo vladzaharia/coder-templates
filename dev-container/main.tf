@@ -166,13 +166,6 @@ module "git-commit-signing" {
   agent_id = coder_agent.main.id
 }
 
-module "github-upload-public-key" {
-  source           = "registry.coder.com/modules/github-upload-public-key/coder"
-  version          = "1.0.14"
-  agent_id         = coder_agent.main.id
-  external_auth_id = data.coder_external_auth.github.id
-}
-
 module "code-server" {
   source                  = "registry.coder.com/modules/code-server/coder"
   version                 = "1.0.14"
