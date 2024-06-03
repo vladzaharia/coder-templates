@@ -75,6 +75,10 @@ locals {
 data "coder_provisioner" "me" {
 }
 
+data "coder_external_auth" "github" {
+  id = "github"
+}
+
 provider "docker" {
 }
 
