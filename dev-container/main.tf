@@ -75,6 +75,10 @@ locals {
 data "coder_provisioner" "me" {
 }
 
+data "coder_external_auth" "github" {
+  id = "github"
+}
+
 provider "docker" {
 }
 
@@ -124,6 +128,16 @@ data "coder_parameter" "github_repo" {
   mutable      = false
 }
 
+data "coder_parameter" "dotfiles_repo" {
+  order        = 150
+  name         = "dotfiles_repo"
+  display_name = "Dotfiles repo"
+  description  = "GitHub repository to download and install dotfiles, if provided."
+  icon         = "/icon/dotfiles.svg"
+  default      = ""
+  mutable      = false
+}
+
 data "coder_parameter" "vault_project" {
   order        = 200
   name         = "vault_project"
@@ -152,37 +166,46 @@ module "git-commit-signing" {
   agent_id = coder_agent.main.id
 }
 
+module "github-upload-public-key" {
+  source           = "registry.coder.com/modules/github-upload-public-key/coder"
+  version          = "1.0.14"
+  agent_id         = coder_agent.main.id
+  external_auth_id = data.coder_external_auth.github.id
+}
+
 module "code-server" {
-  source   = "registry.coder.com/modules/code-server/coder"
-  version  = "1.0.14"
-  display_name = "VS Code in Browser"
-  agent_id = coder_agent.main.id
+  source                  = "registry.coder.com/modules/code-server/coder"
+  version                 = "1.0.14"
+  display_name            = "VS Code in Browser"
+  order                   = 10
+  agent_id                = coder_agent.main.id
   auto_install_extensions = true
-  folder = "/home/${local.username}/workspace"
+  folder                  = "/home/${local.username}/workspace"
   settings = {
     "workbench.activityBar.location" = "top",
-    "editor.fontFamily" = "'MonoLisa Nerd Font', MonoLisa, Menlo, Monaco, 'Courier New', monospace",
-    "workbench.iconTheme" = "material-icon-theme",
-    "git.enableSmartCommit" = true,
-    "git.autofetch" = true,
-    "git.confirmSync" = false,
+    "editor.fontFamily"              = "'MonoLisa Nerd Font', MonoLisa, Menlo, Monaco, 'Courier New', monospace",
+    "workbench.iconTheme"            = "material-icon-theme",
+    "git.enableSmartCommit"          = true,
+    "git.autofetch"                  = true,
+    "git.confirmSync"                = false,
   }
 }
 
 module "vscode-web" {
-  source         = "registry.coder.com/modules/vscode-web/coder"
-  version        = "1.0.14"
-  agent_id       = coder_agent.main.id
-  accept_license = true
+  source                  = "registry.coder.com/modules/vscode-web/coder"
+  version                 = "1.0.14"
+  agent_id                = coder_agent.main.id
+  order                   = 25
+  accept_license          = true
   auto_install_extensions = true
-  folder = "/home/${local.username}/workspace"
+  folder                  = "/home/${local.username}/workspace"
   settings = {
     "workbench.activityBar.location" = "top",
-    "editor.fontFamily" = "'MonoLisa Nerd Font', MonoLisa, Menlo, Monaco, 'Courier New', monospace",
-    "workbench.iconTheme" = "material-icon-theme",
-    "git.enableSmartCommit" = true,
-    "git.autofetch" = true,
-    "git.confirmSync" = false,
+    "editor.fontFamily"              = "'MonoLisa Nerd Font', MonoLisa, Menlo, Monaco, 'Courier New', monospace",
+    "workbench.iconTheme"            = "material-icon-theme",
+    "git.enableSmartCommit"          = true,
+    "git.autofetch"                  = true,
+    "git.confirmSync"                = false,
   }
 }
 
@@ -190,6 +213,13 @@ module "coder-login" {
   source   = "registry.coder.com/modules/coder-login/coder"
   version  = "1.0.2"
   agent_id = coder_agent.main.id
+}
+
+module "dotfiles" {
+  source   = "registry.coder.com/modules/dotfiles/coder"
+  version  = "1.0.14"
+  agent_id = coder_agent.main.id
+  dotfiles_uri = "https://github.com/${data.coder_parameter.dotfiles_repo.value}"
 }
 
 resource "coder_agent" "main" {

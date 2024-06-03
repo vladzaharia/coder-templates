@@ -274,37 +274,53 @@ module "git-commit-signing" {
   agent_id = coder_agent.main.id
 }
 
-module "code-server" {
-  source   = "registry.coder.com/modules/code-server/coder"
+module "github-upload-public-key" {
+  source           = "registry.coder.com/modules/github-upload-public-key/coder"
+  version          = "1.0.14"
+  agent_id         = coder_agent.main.id
+  external_auth_id = data.coder_external_auth.github.id
+}
+
+module "dotfiles" {
+  source   = "registry.coder.com/modules/dotfiles/coder"
   version  = "1.0.14"
-  display_name = "VS Code in Browser"
   agent_id = coder_agent.main.id
+  dotfiles_uri = "https://github.com/${data.coder_parameter.dotfiles_repo.value}"
+}
+
+module "code-server" {
+  source                  = "registry.coder.com/modules/code-server/coder"
+  version                 = "1.0.14"
+  display_name            = "VS Code in Browser"
+  order                   = 10
+  agent_id                = coder_agent.main.id
   auto_install_extensions = true
-  folder = "/home/${local.username}/${module.git_clone.folder_name}"
+  folder                  = "/home/${local.username}/${module.git_clone.folder_name}"
   settings = {
     "workbench.activityBar.location" = "top",
-    "editor.fontFamily" = "'MonoLisa Nerd Font', MonoLisa, Menlo, Monaco, 'Courier New', monospace",
-    "workbench.iconTheme" = "material-icon-theme",
-    "git.enableSmartCommit" = true,
-    "git.autofetch" = true,
-    "git.confirmSync" = false,
+    "editor.fontFamily"              = "'MonoLisa Nerd Font', MonoLisa, Menlo, Monaco, 'Courier New', monospace",
+    "workbench.iconTheme"            = "material-icon-theme",
+    "git.enableSmartCommit"          = true,
+    "git.autofetch"                  = true,
+    "git.confirmSync"                = false,
   }
 }
 
 module "vscode-web" {
-  source         = "registry.coder.com/modules/vscode-web/coder"
-  version        = "1.0.14"
-  agent_id       = coder_agent.main.id
-  accept_license = true
+  source                  = "registry.coder.com/modules/vscode-web/coder"
+  version                 = "1.0.14"
+  order                   = 25
+  agent_id                = coder_agent.main.id
+  accept_license          = true
   auto_install_extensions = true
-  folder = "/home/${local.username}/${module.git_clone.folder_name}"
+  folder                  = "/home/${local.username}/${module.git_clone.folder_name}"
   settings = {
     "workbench.activityBar.location" = "top",
-    "editor.fontFamily" = "'MonoLisa Nerd Font', MonoLisa, Menlo, Monaco, 'Courier New', monospace",
-    "workbench.iconTheme" = "material-icon-theme",
-    "git.enableSmartCommit" = true,
-    "git.autofetch" = true,
-    "git.confirmSync" = false,
+    "editor.fontFamily"              = "'MonoLisa Nerd Font', MonoLisa, Menlo, Monaco, 'Courier New', monospace",
+    "workbench.iconTheme"            = "material-icon-theme",
+    "git.enableSmartCommit"          = true,
+    "git.autofetch"                  = true,
+    "git.confirmSync"                = false,
   }
 }
 
