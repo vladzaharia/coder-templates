@@ -285,7 +285,7 @@ module "dotfiles" {
   source   = "registry.coder.com/modules/dotfiles/coder"
   version  = "1.0.14"
   agent_id = coder_agent.main.id
-  dotfiles_uri = data.coder_parameter.dotfiles_uri.value
+  dotfiles_uri = "https://github.com/${data.coder_parameter.dotfiles_repo.value}"
 }
 
 module "code-server" {
