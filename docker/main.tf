@@ -231,54 +231,119 @@ data "coder_parameter" "vault_project" {
   name         = "vault_project"
   display_name = "Vault project name"
   description  = "Name of the project to retrieve and inject environment variables from"
-  icon        = "/icon/vault.svg"
-  default = ""
-  mutable = false
+  icon         = "/icon/vault.svg"
+  default      = ""
+  mutable      = false
 }
 
 data "vault_generic_secret" "dotenv" {
   path = "dotenv/${data.coder_parameter.vault_project.value != "" ? data.coder_parameter.vault_project.value : "_empty"}/dev"
 }
 
-resource "coder_script" "dotfiles" {
-  agent_id = coder_agent.main.id
-  display_name = "Installing dotfiles"
-  icon = "/icon/dotfiles.svg"
+# resource "coder_script" "dotfiles" {
+#   agent_id     = coder_agent.main.id
+#   display_name = "Installing dotfiles"
+#   icon         = "/icon/dotfiles.svg"
 
-  cron = data.coder_parameter.dotfiles_repo.value == "" ? "0 6 * * *" : null
-  run_on_start = data.coder_parameter.dotfiles_repo.value != ""
-  start_blocks_login = data.coder_parameter.dotfiles_repo.value != ""
-  script = <<-EOT
-    set -e
-    echo "Installing dotfiles from $DOTFILES_URI..."
-    coder dotfiles -y "https://github.com/$DOTFILES_URI"
-    bash ~/.config/coderv2/dotfiles/bootstrap.sh
-  EOT
+#   cron               = data.coder_parameter.dotfiles_repo.value == "" ? "0 6 * * *" : null
+#   run_on_start       = data.coder_parameter.dotfiles_repo.value != ""
+#   start_blocks_login = data.coder_parameter.dotfiles_repo.value != ""
+#   script             = <<-EOT
+#     set -e
+#     echo "Installing dotfiles from $DOTFILES_URI..."
+#     coder dotfiles -y "https://github.com/$DOTFILES_URI"
+#     bash ~/.config/coderv2/dotfiles/bootstrap.sh
+#   EOT
+# }
+
+# resource "coder_script" "code_server" {
+#   agent_id           = coder_agent.main.id
+#   display_name       = "Installing code-server"
+#   icon               = "/icon/code.svg"
+#   run_on_start       = true
+#   start_blocks_login = true
+#   script             = <<-EOT
+#     set -e
+#     echo "Installing code-server..."
+#     curl -fsSL https://code-server.dev/install.sh | sh -s -- --method=standalone --prefix=/tmp/code-server
+#     /tmp/code-server/bin/code-server --auth none --port 13337 >/tmp/code-server.log 2>&1 &
+#   EOT
+# }
+
+module "git-config" {
+  source                = "registry.coder.com/modules/git-config/coder"
+  version               = "1.0.12"
+  agent_id              = coder_agent.main.id
+  allow_username_change = false
+  allow_email_change    = false
 }
 
-resource "coder_script" "code_server" {
+module "git-commit-signing" {
+  source   = "registry.coder.com/modules/git-commit-signing/coder"
+  version  = "1.0.11"
   agent_id = coder_agent.main.id
-  display_name = "Installing code-server"
-  icon = "/icon/code.svg"
-  run_on_start = true
-  start_blocks_login = true
-  script = <<-EOT
-    set -e
-    echo "Installing code-server..."
-    curl -fsSL https://code-server.dev/install.sh | sh -s -- --method=standalone --prefix=/tmp/code-server --version 4.11.0
-    /tmp/code-server/bin/code-server --auth none --port 13337 >/tmp/code-server.log 2>&1 &
-  EOT
+}
+
+module "code-server" {
+  source   = "registry.coder.com/modules/code-server/coder"
+  version  = "1.0.14"
+  agent_id = coder_agent.main.id
+  auto_install_extensions = true
+  folder = "/home/${local.username}"
+  extensions = [
+    "redhat.vscode-yaml",
+    "ms-azuretools.vscode-docker",
+    "DavidAnson.vscode-markdownlint",
+    "PKief.material-icon-theme",
+    "eamodio.gitlens",
+    "GitHub.vscode-pull-request-github",
+    "stkb.rewrap"
+  ]
+  settings = {
+    "workbench.activityBar.location" = "top",
+    "editor.fontFamily" = "'MonoLisa Nerd Font', MonoLisa, Menlo, Monaco, 'Courier New', monospace",
+    "workbench.iconTheme" = "material-icon-theme",
+    "git.enableSmartCommit" = true,
+    "git.autofetch" = true,
+    "git.confirmSync" = false,
+  }
+}
+
+module "vscode-web" {
+  source         = "registry.coder.com/modules/vscode-web/coder"
+  version        = "1.0.14"
+  agent_id       = coder_agent.main.id
+  accept_license = true
+  auto_install_extensions = true
+  folder = "/home/${local.username}"
+  extensions = [
+    "redhat.vscode-yaml",
+    "ms-azuretools.vscode-docker",
+    "DavidAnson.vscode-markdownlint",
+    "PKief.material-icon-theme",
+    "eamodio.gitlens",
+    "GitHub.vscode-pull-request-github",
+    "stkb.rewrap"
+  ]
+  settings = {
+    "workbench.activityBar.location" = "top",
+    "editor.fontFamily" = "'MonoLisa Nerd Font', MonoLisa, Menlo, Monaco, 'Courier New', monospace",
+    "workbench.iconTheme" = "material-icon-theme",
+    "git.enableSmartCommit" = true,
+    "git.autofetch" = true,
+    "git.confirmSync" = false,
+  }
 }
 
 resource "coder_script" "npm" {
-  agent_id = coder_agent.main.id
+  agent_id     = coder_agent.main.id
   display_name = "Running NPM install"
-  icon = "/icon/nodejs.svg"
+  icon         = "/icon/nodejs.svg"
 
-  cron = !strcontains(data.coder_parameter.base_image.value, "node:") ? "0 6 * * *" : null
-  run_on_start = strcontains(data.coder_parameter.base_image.value, "node:")
+  cron               = !strcontains(data.coder_parameter.base_image.value, "node:") ? "0 6 * * *" : null
+  run_on_start       = strcontains(data.coder_parameter.base_image.value, "node:")
   start_blocks_login = strcontains(data.coder_parameter.base_image.value, "node:")
-  script = <<-EOT
+  script             = <<-EOT
     set -e
     echo "Running npm install..."
     cd ~/workspace
@@ -287,13 +352,13 @@ resource "coder_script" "npm" {
 }
 
 resource "coder_agent" "main" {
-  arch                   = data.coder_provisioner.me.arch
-  os                     = "linux"
-    startup_script         = <<-EOT
+  arch           = data.coder_provisioner.me.arch
+  os             = "linux"
+  startup_script = <<-EOT
     set -e
 
     # install and start code-server
-    curl -fsSL https://code-server.dev/install.sh | sh -s -- --method=standalone --prefix=/tmp/code-server --version 4.11.0
+    curl -fsSL https://code-server.dev/install.sh | sh -s -- --method=standalone --prefix=/tmp/code-server
     /tmp/code-server/bin/code-server --auth none --port 13337 >/tmp/code-server.log 2>&1 &
   EOT
 
