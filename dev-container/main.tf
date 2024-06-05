@@ -173,7 +173,7 @@ module "code-server" {
   order                   = 10
   agent_id                = coder_agent.main.id
   auto_install_extensions = true
-  folder                  = "/home/${local.username}/workspace"
+  folder                  = "/workspaces/${data.coder_workspace.name}.git"
   settings = {
     "workbench.activityBar.location" = "top",
     "editor.fontFamily"              = "'MonoLisa Nerd Font', MonoLisa, Menlo, Monaco, 'Courier New', monospace",
@@ -191,7 +191,7 @@ module "vscode-web" {
   order                   = 25
   accept_license          = true
   auto_install_extensions = true
-  folder                  = "/home/${local.username}/workspace"
+  folder                  = "/workspaces/${data.coder_workspace.name}.git"
   settings = {
     "workbench.activityBar.location" = "top",
     "editor.fontFamily"              = "'MonoLisa Nerd Font', MonoLisa, Menlo, Monaco, 'Courier New', monospace",
