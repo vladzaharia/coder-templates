@@ -306,6 +306,14 @@ resource "docker_volume" "image_cache" {
   }
 }
 
+resource "docker_volume" "layer_cache" {
+  name = "coder-layer-cache"
+  lifecycle {
+    ignore_changes  = all
+    prevent_destroy = true
+  }
+}
+
 resource "docker_container" "workspace" {
   count = data.coder_workspace.main.start_count
   image = "ghcr.io/coder/envbuilder:0.2.9"
@@ -319,7 +327,9 @@ resource "docker_container" "workspace" {
     "CODER_AGENT_URL=${replace(data.coder_workspace.main.access_url, "/localhost|127\\.0\\.0\\.1/", "host.docker.internal")}",
     "GIT_URL=https://github.com/${data.coder_parameter.github_repo.value}.git",
     "INIT_SCRIPT=${replace(coder_agent.main.init_script, "/localhost|127\\.0\\.0\\.1/", "host.docker.internal")}",
-    "FALLBACK_IMAGE=ubuntu:latest"
+    "FALLBACK_IMAGE=ubuntu:latest",
+    "ENVBUILDER_BASE_IMAGE_CACHE_DIR=/cache/image",
+    "ENVBUILDER_LAYER_CACHE_DIR=/cache/layer"
   ], [for k, v in data.vault_generic_secret.dotenv.data : "${k}=${v}"])
 
   cpu_set = local.size_mapping[data.coder_parameter.size.value].cores
@@ -336,10 +346,17 @@ resource "docker_container" "workspace" {
   }
 
   volumes {
-    container_path = "/cache"
+    container_path = "/cache/image"
     volume_name    = docker_volume.image_cache.name
     read_only      = true
   }
+
+  volumes {
+    container_path = "/cache/layer"
+    volume_name    = docker_volume.layer_cache.name
+    read_only      = true
+  }
+
   # Add labels in Docker to keep track of orphan resources.
   labels {
     label = "coder.owner"
