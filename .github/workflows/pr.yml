@@ -57,17 +57,17 @@ jobs:
           key: ${{ runner.os }}-terraform-${{ hashFiles(format('./{0}/.terraform.lock.hcl', matrix.template)) }}
           restore-keys: |
             ${{ runner.os }}-terraform-
-      - name: Pull Vault secrets from Vault
-        uses: hashicorp/vault-action@v2
-        with:
-          url: https://vault.polaris.rest
-          role: coder-templates
-          path: github
-          method: jwt
-          # jwtGithubAudience: sigstore
-          secrets: |
-            /ci-cd/coder-templates/pr VAULT_ROLE_ID ;
-            /ci-cd/coder-templates/pr VAULT_SECRET_ID
+      # - name: Pull Vault secrets from Vault
+      #   uses: hashicorp/vault-action@v2
+      #   with:
+      #     url: https://vault.polaris.rest
+      #     role: coder-templates
+      #     path: github
+      #     method: jwt
+      #     # jwtGithubAudience: sigstore
+      #     secrets: |
+      #       /ci-cd/coder-templates/pr VAULT_ROLE_ID ;
+      #       /ci-cd/coder-templates/pr VAULT_SECRET_ID
       - name: Download Terraform packages
         run: terraform init
         working-directory: ./${{ matrix.template }}
@@ -81,5 +81,7 @@ jobs:
         working-directory: ./${{ matrix.template }}
         if: ${{ !startsWith(matrix.template, '.') }}
         env:
-            TF_VAR_vault_role_id: ${{ env.VAULT_ROLE_ID }}
-            TF_VAR_vault_secret_id: ${{ env.VAULT_SECRET_ID }}
+            # TF_VAR_vault_role_id: ${{ env.VAULT_ROLE_ID }}
+            TF_VAR_vault_role_id: ${{ secrets.VAULT_ROLE_ID }}
+            # TF_VAR_vault_secret_id: ${{ env.VAULT_SECRET_ID }}
+            TF_VAR_vault_secret_id: ${{ secrets.VAULT_SECRET_ID }}

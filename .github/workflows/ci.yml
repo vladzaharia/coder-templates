@@ -81,18 +81,18 @@ jobs:
         run: |
           curl -fsSL "https://dev.coder.com/bin/coder-linux-amd64" -o "./coder"
           chmod +x "./coder"
-      - name: Pull Vault secrets from Vault
-        uses: hashicorp/vault-action@v2
-        with:
-          url: https://vault.polaris.rest
-          role: coder-templates
-          path: github
-          method: jwt
-          # jwtGithubAudience: sigstore
-          secrets: |
-            /ci-cd/coder-templates/ci VAULT_ROLE_ID ;
-            /ci-cd/coder-templates/ci VAULT_SECRET_ID ;
-            /ci-cd/coder-templates/ci CODER_SESSION_TOKEN
+      # - name: Pull Vault secrets from Vault
+      #   uses: hashicorp/vault-action@v2
+      #   with:
+      #     url: https://vault.polaris.rest
+      #     role: coder-templates
+      #     path: github
+      #     method: jwt
+      #     # jwtGithubAudience: sigstore
+      #     secrets: |
+      #       /ci-cd/coder-templates/ci VAULT_ROLE_ID ;
+      #       /ci-cd/coder-templates/ci VAULT_SECRET_ID ;
+      #       /ci-cd/coder-templates/ci CODER_SESSION_TOKEN
   
       - name: Push template
         run: |
@@ -100,10 +100,13 @@ jobs:
         if: ${{ !startsWith(matrix.template, '.') }}
         env:
             CODER_URL: https://code.polaris.rest
-            CODER_SESSION_TOKEN: ${{ env.CODER_SESSION_TOKEN }}
+            # CODER_SESSION_TOKEN: ${{ env.CODER_SESSION_TOKEN }}
+            CODER_SESSION_TOKEN: ${{ secrets.CODER_SESSION_TOKEN }}
             CODER_TEMPLATE_NAME: ${{ matrix.template }}
             CODER_TEMPLATE_VERSION: ${{ needs.get_params.outputs.sha_short }}
             CODER_TEMPLATE_DIR: ./${{ matrix.template }}
             CODER_TEMPLATE_MESSAGE: ${{ inputs.message || needs.get_params.outputs.pr_title }}
-            VAULT_ROLE_ID: ${{ env.VAULT_ROLE_ID }}
-            VAULT_SECRET_ID: ${{ env.VAULT_SECRET_ID }}
+            # VAULT_ROLE_ID: ${{ env.VAULT_ROLE_ID }}
+            VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
+            # VAULT_SECRET_ID: ${{ env.VAULT_SECRET_ID }}
+            VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
