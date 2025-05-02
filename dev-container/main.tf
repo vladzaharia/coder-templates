@@ -2,15 +2,12 @@ terraform {
   required_providers {
     coder = {
       source  = "coder/coder"
-      version = "> 0.7.0, < 1.0.0"
     }
     docker = {
       source  = "kreuzwerker/docker"
-      version = "> 3.0.0, < 4.0.0"
     }
     vault = {
       source  = "hashicorp/vault"
-      version = "> 3.20.0, < 4.0.0"
     }
   }
 }
@@ -154,7 +151,7 @@ data "vault_generic_secret" "dotenv" {
 
 module "git-config" {
   source                = "registry.coder.com/modules/git-config/coder"
-  version               = "1.0.12"
+  version               = ">= 1.0.0"
   agent_id              = coder_agent.main.id
   allow_username_change = false
   allow_email_change    = false
@@ -162,13 +159,13 @@ module "git-config" {
 
 module "git-commit-signing" {
   source   = "registry.coder.com/modules/git-commit-signing/coder"
-  version  = "1.0.11"
+  version  = ">= 1.0.0"
   agent_id = coder_agent.main.id
 }
 
 module "code-server" {
   source                  = "registry.coder.com/modules/code-server/coder"
-  version                 = "1.0.14"
+  version                 = ">= 1.0.0"
   display_name            = "VS Code Server"
   order                   = 10
   agent_id                = coder_agent.main.id
@@ -186,7 +183,7 @@ module "code-server" {
 
 module "vscode-web" {
   source                  = "registry.coder.com/modules/vscode-web/coder"
-  version                 = "1.0.14"
+  version                 = ">= 1.0.0"
   agent_id                = coder_agent.main.id
   order                   = 25
   accept_license          = true
@@ -204,13 +201,13 @@ module "vscode-web" {
 
 module "coder-login" {
   source   = "registry.coder.com/modules/coder-login/coder"
-  version  = "1.0.2"
+  version  = ">= 1.0.0"
   agent_id = coder_agent.main.id
 }
 
 module "dotfiles" {
   source   = "registry.coder.com/modules/dotfiles/coder"
-  version  = "1.0.14"
+  version  = ">= 1.0.0"
   agent_id = coder_agent.main.id
   dotfiles_uri = "https://github.com/${data.coder_parameter.dotfiles_repo.value}"
 }
@@ -220,6 +217,12 @@ resource "coder_agent" "main" {
   os             = "linux"
   startup_script = <<-EOT
     set -e
+
+    # Prepare user home with default files on first start.
+    if [ ! -f ~/.init_done ]; then
+      cp -rT /etc/skel ~
+      touch ~/.init_done
+    fi
 
     if [ ! -d ~/.ssh ]; then
       mkdir -p ~/.ssh && chmod 700 ~/.ssh

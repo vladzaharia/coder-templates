@@ -2,19 +2,15 @@ terraform {
   required_providers {
     coder = {
       source  = "coder/coder"
-      version = "> 0.7.0, < 1.0.0"
     }
     aws = {
       source  = "hashicorp/aws"
-      version = "> 5.0.0, < 6.0.0"
     }
     random = {
       source  = "hashicorp/random"
-      version = "> 3.0.0, < 4.0.0"
     }
     vault = {
       source  = "hashicorp/vault"
-      version = "> 3.20.0, < 4.0.0"
     }
   }
 }

@@ -2,15 +2,12 @@ terraform {
   required_providers {
     coder = {
       source  = "coder/coder"
-      version = "> 0.7.0, < 1.0.0"
     }
     docker = {
       source  = "kreuzwerker/docker"
-      version = "> 3.0.0, < 4.0.0"
     }
     vault = {
       source  = "hashicorp/vault"
-      version = "> 3.20.0, < 4.0.0"
     }
   }
 }
@@ -72,17 +69,11 @@ locals {
   }
 }
 
-data "coder_provisioner" "me" {
-}
+provider "docker" {}
 
-provider "docker" {
-}
-
-data "coder_workspace" "main" {
-}
-
-data "coder_workspace_owner" "me" {
-}
+data "coder_provisioner" "me" {}
+data "coder_workspace" "main" {}
+data "coder_workspace_owner" "me" {}
 
 data "coder_parameter" "size" {
   order        = 0
@@ -242,7 +233,7 @@ data "vault_generic_secret" "dotenv" {
 
 module "git-config" {
   source                = "registry.coder.com/modules/git-config/coder"
-  version               = "1.0.12"
+  version               = ">= 1.0.0"
   agent_id              = coder_agent.main.id
   allow_username_change = false
   allow_email_change    = false
@@ -250,25 +241,25 @@ module "git-config" {
 
 module "git-commit-signing" {
   source   = "registry.coder.com/modules/git-commit-signing/coder"
-  version  = "1.0.11"
+  version  = ">= 1.0.0"
   agent_id = coder_agent.main.id
 }
 
 module "dotfiles" {
   source   = "registry.coder.com/modules/dotfiles/coder"
-  version  = "1.0.14"
+  version  = ">= 1.0.0"
   agent_id = coder_agent.main.id
   dotfiles_uri = "https://github.com/${data.coder_parameter.dotfiles_repo.value}"
 }
 
 module "code-server" {
   source                  = "registry.coder.com/modules/code-server/coder"
-  version                 = "1.0.14"
+  version                 = ">= 1.0.0"
   display_name            = "VS Code Server"
   order                   = 10
   agent_id                = coder_agent.main.id
   auto_install_extensions = true
-  folder                  = "/home/${local.username}"
+  folder                  = "/home/${local.username}/${data.coder_workspace.main.name}"
   settings = {
     "workbench.activityBar.location" = "top",
     "editor.fontFamily"              = "'MonoLisa Nerd Font', MonoLisa, Menlo, Monaco, 'Courier New', monospace",
@@ -281,12 +272,12 @@ module "code-server" {
 
 module "vscode-web" {
   source                  = "registry.coder.com/modules/vscode-web/coder"
-  version                 = "1.0.14"
+  version                 = ">= 1.0.0"
   order                   = 25
   agent_id                = coder_agent.main.id
   accept_license          = true
   auto_install_extensions = true
-  folder                  = "/home/${local.username}"
+  folder                  = "/home/${local.username}/${data.coder_workspace.main.name}"
   settings = {
     "workbench.activityBar.location" = "top",
     "editor.fontFamily"              = "'MonoLisa Nerd Font', MonoLisa, Menlo, Monaco, 'Courier New', monospace",
@@ -295,6 +286,24 @@ module "vscode-web" {
     "git.autofetch"                  = true,
     "git.confirmSync"                = false,
   }
+}
+
+module "jetbrains_gateway" {
+  count  = data.coder_workspace.me.start_count
+  source = "registry.coder.com/modules/jetbrains-gateway/coder"
+
+  jetbrains_ides = ["IU", "PS", "WS", "PY", "CL", "GO", "RM", "RD", "RR"]
+  default        = "IU"
+
+  # Default folder to open when starting a JetBrains IDE
+  folder = "/home/${local.username}/${data.coder_workspace.main.name}"
+
+  # This ensures that the latest version of the module gets downloaded, you can also pin the module version to prevent breaking changes in production.
+  version = ">= 1.0.0"
+
+  agent_id   = coder_agent.main.id
+  agent_name = "main"
+  order      = 50
 }
 
 resource "coder_script" "npm" {
@@ -315,7 +324,7 @@ resource "coder_script" "npm" {
 
 module "coder-login" {
   source   = "registry.coder.com/modules/coder-login/coder"
-  version  = "1.0.2"
+  version  = ">= 1.0.0"
   agent_id = coder_agent.main.id
 }
 
@@ -330,6 +339,18 @@ resource "coder_agent" "main" {
     "DOTFILES_URI"      = data.coder_parameter.dotfiles_repo.value != "" ? data.coder_parameter.dotfiles_repo.value : null
 
   }, data.vault_generic_secret.dotenv.data)
+
+  startup_script = <<-EOT
+    set -e
+
+    # Prepare user home with default files on first start.
+    if [ ! -f ~/.init_done ]; then
+      cp -rT /etc/skel ~
+      touch ~/.init_done
+    fi
+
+    # Add any commands that should be executed at workspace startup (e.g install requirements, start a program, etc) here
+  EOT
 
   metadata {
     display_name = "CPU Usage"
@@ -365,7 +386,7 @@ resource "coder_app" "blink" {
   url          = "blinkshell://run?key=12BA15&cmd=code ${data.coder_workspace.main.access_url}/@${data.coder_workspace_owner.me.name}/${data.coder_workspace.main.name}.main/apps/code-server/"
   icon         = "https://assets.polaris.rest/Logos/blink_alt.svg"
   external     = true
-  order        = 50
+  order        = 100
 }
 
 resource "docker_volume" "home_volume" {

@@ -2,23 +2,18 @@ terraform {
   required_providers {
     coder = {
       source  = "coder/coder"
-      version = "> 0.7.0, < 1.0.0"
     }
     macaddress = {
       source  = "ivoronin/macaddress"
-      version = "> 0.3.0, < 1.0.0"
     }
     random = {
       source  = "hashicorp/random"
-      version = "> 3.5.0, < 4.0.0"
     }
     truenas = {
       source  = "dariusbakunas/truenas"
-      version = "> 0.11.0, < 1.0.0"
     }
     vault = {
       source  = "hashicorp/vault"
-      version = "> 3.20.0, < 4.0.0"
     }
   }
 }
