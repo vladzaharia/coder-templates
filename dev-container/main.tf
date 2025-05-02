@@ -1,13 +1,13 @@
 terraform {
   required_providers {
     coder = {
-      source  = "coder/coder"
+      source = "coder/coder"
     }
     docker = {
-      source  = "kreuzwerker/docker"
+      source = "kreuzwerker/docker"
     }
     vault = {
-      source  = "hashicorp/vault"
+      source = "hashicorp/vault"
     }
   }
 }
@@ -149,6 +149,27 @@ data "vault_generic_secret" "dotenv" {
   path = "dotenv/${data.coder_parameter.vault_project.value != "" ? data.coder_parameter.vault_project.value : "_empty"}/dev"
 }
 
+data "vault_generic_secret" "claude_code" {
+  path = "dotenv/coder-claude-code/dev"
+}
+
+module "devcontainers-cli" {
+  source   = "registry.coder.com/modules/devcontainers-cli/coder"
+  version  = ">= 1.0.0"
+  agent_id = coder_agent.main.id
+}
+
+module "claude-code" {
+  source              = "registry.coder.com/modules/claude-code/coder"
+  version             = ">= 1.0.0"
+  agent_id            = coder_agent.main.id
+  folder              = "/home/${local.username}/${data.coder_workspace.main.name}"
+  install_claude_code = true
+  claude_code_version = "latest"
+  experiment_use_screen   = true
+  experiment_report_tasks = true
+}
+
 module "git-config" {
   source                = "registry.coder.com/modules/git-config/coder"
   version               = ">= 1.0.0"
@@ -199,6 +220,30 @@ module "vscode-web" {
   }
 }
 
+module "windsurf" {
+  source   = "registry.coder.com/modules/windsurf/coder"
+  version  = ">= 1.0.0"
+  agent_id = coder_agent.main.id
+  folder   = "/workspaces/${data.coder_workspace.name}.git"
+  order    = 40
+}
+
+module "jetbrains_gateway" {
+  source  = "registry.coder.com/modules/jetbrains-gateway/coder"
+  version = ">= 1.0.0"
+
+  jetbrains_ides = ["IU", "PS", "WS", "PY", "CL", "GO", "RM", "RD", "RR"]
+  default        = "IU"
+
+  # Default folder to open when starting a JetBrains IDE
+  folder = "/home/${local.username}/${module.git_clone.folder_name}"
+
+
+  agent_id   = coder_agent.main.id
+  agent_name = "main"
+  order      = 50
+}
+
 module "coder-login" {
   source   = "registry.coder.com/modules/coder-login/coder"
   version  = ">= 1.0.0"
@@ -206,9 +251,9 @@ module "coder-login" {
 }
 
 module "dotfiles" {
-  source   = "registry.coder.com/modules/dotfiles/coder"
-  version  = ">= 1.0.0"
-  agent_id = coder_agent.main.id
+  source       = "registry.coder.com/modules/dotfiles/coder"
+  version      = ">= 1.0.0"
+  agent_id     = coder_agent.main.id
   dotfiles_uri = "https://github.com/${data.coder_parameter.dotfiles_repo.value}"
 }
 
@@ -235,7 +280,9 @@ resource "coder_agent" "main" {
     GIT_COMMITTER_NAME  = "${data.coder_workspace_owner.me.full_name}"
     GIT_AUTHOR_EMAIL    = "${data.coder_workspace_owner.me.email}"
     GIT_COMMITTER_EMAIL = "${data.coder_workspace_owner.me.email}"
-  }, data.vault_generic_secret.dotenv.data)
+    CODER_MCP_APP_STATUS_SLUG = "claude-code"
+    CODER_MCP_CLAUDE_TASK_PROMPT   = data.coder_parameter.ai_prompt.value
+  }, data.vault_generic_secret.dotenv.data, data.vault_generic_secret.claude_code.data)
 
   metadata {
     display_name = "CPU Usage"
@@ -271,7 +318,7 @@ resource "coder_app" "blink" {
   url          = "blinkshell://run?key=12BA15&cmd=code ${data.coder_workspace.main.access_url}/@${data.coder_workspace_owner.me.name}/${data.coder_workspace.main.name}.main/apps/code-server/"
   icon         = "https://assets.polaris.rest/Logos/blink_alt.svg"
   external     = true
-  order        = 50
+  order        = 100
 }
 
 resource "docker_volume" "workspaces" {
@@ -319,7 +366,7 @@ resource "docker_volume" "layer_cache" {
 
 resource "docker_container" "workspace" {
   count = data.coder_workspace.main.start_count
-  image = "ghcr.io/coder/envbuilder:0.2.9"
+  image = "ghcr.io/coder/envbuilder:latest"
   # Uses lower() to avoid Docker restriction on container names.
   name = "coder-${data.coder_workspace_owner.me.name}-${lower(data.coder_workspace.main.name)}"
   # Hostname makes the shell more user friendly: coder@my-workspace:~$

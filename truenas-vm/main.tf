@@ -19,7 +19,7 @@ terraform {
 }
 
 locals {
-  username = data.coder_workspace.me.owner
+  username = data.coder_workspace_owner.me.owner.name
 }
 
 variable "vault_role_id" {
@@ -105,10 +105,10 @@ resource "coder_agent" "main" {
   EOT
 
   env = merge({
-    GIT_AUTHOR_NAME     = "${data.coder_workspace.me.owner}"
-    GIT_COMMITTER_NAME  = "${data.coder_workspace.me.owner}"
-    GIT_AUTHOR_EMAIL    = "${data.coder_workspace.me.owner_email}"
-    GIT_COMMITTER_EMAIL = "${data.coder_workspace.me.owner_email}"
+    GIT_AUTHOR_NAME     = "${data.coder_workspace_owner.me.owner.name}"
+    GIT_COMMITTER_NAME  = "${data.coder_workspace_owner.me.owner.name}"
+    GIT_AUTHOR_EMAIL    = "${data.coder_workspace_owner.me.owner.name_email}"
+    GIT_COMMITTER_EMAIL = "${data.coder_workspace_owner.me.owner.name_email}"
   }, data.vault_generic_secret.dotenv.data)
 
   metadata {
@@ -186,7 +186,7 @@ provider "truenas" {
 
 resource "truenas_vm" "vm" {
   name             = "coder-${random_id.vm_id.hex}}"
-  description      = "Coder VM for ${lower(data.coder_workspace.me.owner)}'s ${lower(data.coder_workspace.me.name)} workspace"
+  description      = "Coder VM for ${lower(data.coder_workspace_owner.me.owner.name)}'s ${lower(data.coder_workspace.me.name)} workspace"
   vcpus            = 1
   bootloader       = "UEFI"
   autostart        = true

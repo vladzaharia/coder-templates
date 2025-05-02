@@ -12,6 +12,7 @@ RUN apt-get update \
 	jq \
 	lsb-release \
 	make \
+	screen \
 	sudo \
 	vim \
 	wget \

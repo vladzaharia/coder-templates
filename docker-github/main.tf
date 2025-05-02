@@ -244,6 +244,21 @@ data "vault_generic_secret" "dotenv" {
   path = "dotenv/${data.coder_parameter.vault_project.value != "" ? data.coder_parameter.vault_project.value : "_empty"}/dev"
 }
 
+data "vault_generic_secret" "claude_code" {
+  path = "dotenv/coder-claude-code/dev"
+}
+
+module "claude-code" {
+  source              = "registry.coder.com/modules/claude-code/coder"
+  version             = ">= 1.0.0"
+  agent_id            = coder_agent.main.id
+  folder              = "/home/${local.username}/${data.coder_workspace.main.name}"
+  install_claude_code = true
+  claude_code_version = "latest"
+  experiment_use_screen   = true
+  experiment_report_tasks = true
+}
+
 module "git-config" {
   source                = "registry.coder.com/modules/git-config/coder"
   version               = ">= 1.0.0"
@@ -308,8 +323,15 @@ module "vscode-web" {
   }
 }
 
+module "windsurf" {
+  source   = "registry.coder.com/modules/windsurf/coder"
+  version  = ">= 1.0.0"
+  agent_id = coder_agent.main.id
+  folder   = "/workspaces/${data.coder_workspace.name}.git"
+  order    = 40
+}
+
 module "jetbrains_gateway" {
-  count  = data.coder_workspace.me.start_count
   source = "registry.coder.com/modules/jetbrains-gateway/coder"
   version = ">= 1.0.0"
 
@@ -346,6 +368,14 @@ module "coder-login" {
   agent_id = coder_agent.main.id
 }
 
+data "coder_parameter" "ai_prompt" {
+  type        = "string"
+  name        = "AI Prompt"
+  default     = ""
+  description = "Write a prompt for Claude Code"
+  mutable     = true
+}
+
 resource "coder_agent" "main" {
   arch = data.coder_provisioner.me.arch
   os   = "linux"
@@ -356,8 +386,10 @@ resource "coder_agent" "main" {
     GIT_AUTHOR_EMAIL    = "${data.coder_workspace_owner.me.email}"
     GIT_COMMITTER_EMAIL = "${data.coder_workspace_owner.me.email}"
     GITHUB_TOKEN        = "${data.coder_external_auth.github.access_token}"
-    "DOTFILES_URI"      = data.coder_parameter.dotfiles_repo.value != "" ? data.coder_parameter.dotfiles_repo.value : null
-  }, data.vault_generic_secret.dotenv.data)
+    CODER_MCP_APP_STATUS_SLUG = "claude-code"
+    CODER_MCP_CLAUDE_TASK_PROMPT   = data.coder_parameter.ai_prompt.value
+    DOTFILES_URI      = data.coder_parameter.dotfiles_repo.value != "" ? data.coder_parameter.dotfiles_repo.value : null
+  }, data.vault_generic_secret.dotenv.data, data.vault_generic_secret.claude_code.data)
 
   startup_script = <<-EOT
     set -e
