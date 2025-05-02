@@ -64,7 +64,7 @@ jobs:
           role: coder-templates
           path: github
           method: jwt
-          jwtGithubAudience: sigstore
+          # jwtGithubAudience: sigstore
           secrets: |
             /ci-cd/coder-templates/pr VAULT_ROLE_ID ;
             /ci-cd/coder-templates/pr VAULT_SECRET_ID
