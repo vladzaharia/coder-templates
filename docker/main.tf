@@ -1,13 +1,13 @@
 terraform {
   required_providers {
     coder = {
-      source  = "coder/coder"
+      source = "coder/coder"
     }
     docker = {
-      source  = "kreuzwerker/docker"
+      source = "kreuzwerker/docker"
     }
     vault = {
-      source  = "hashicorp/vault"
+      source = "hashicorp/vault"
     }
   }
 }
@@ -250,20 +250,20 @@ module "git-commit-signing" {
 }
 
 module "claude-code" {
-  source              = "registry.coder.com/modules/claude-code/coder"
-  version             = ">= 1.0.0"
-  agent_id            = coder_agent.main.id
-  folder              = "/home/${local.username}/${data.coder_workspace.main.name}"
-  install_claude_code = true
-  claude_code_version = "latest"
+  source                  = "registry.coder.com/modules/claude-code/coder"
+  version                 = ">= 1.0.0"
+  agent_id                = coder_agent.main.id
+  folder                  = "/home/${local.username}/${data.coder_workspace.main.name}"
+  install_claude_code     = true
+  claude_code_version     = "latest"
   experiment_use_screen   = true
   experiment_report_tasks = true
 }
 
 module "dotfiles" {
-  source   = "registry.coder.com/modules/dotfiles/coder"
-  version  = ">= 1.0.0"
-  agent_id = coder_agent.main.id
+  source       = "registry.coder.com/modules/dotfiles/coder"
+  version      = ">= 1.0.0"
+  agent_id     = coder_agent.main.id
   dotfiles_uri = "https://github.com/${data.coder_parameter.dotfiles_repo.value}"
 }
 
@@ -362,13 +362,13 @@ resource "coder_agent" "main" {
   arch = data.coder_provisioner.me.arch
   os   = "linux"
   env = merge({
-    GIT_AUTHOR_NAME     = "${data.coder_workspace_owner.me.full_name}"
-    GIT_COMMITTER_NAME  = "${data.coder_workspace_owner.me.full_name}"
-    GIT_AUTHOR_EMAIL    = "${data.coder_workspace_owner.me.email}"
-    GIT_COMMITTER_EMAIL = "${data.coder_workspace_owner.me.email}"
-    CODER_MCP_APP_STATUS_SLUG = "claude-code"
-    CODER_MCP_CLAUDE_TASK_PROMPT   = data.coder_parameter.ai_prompt.value
-    DOTFILES_URI      = data.coder_parameter.dotfiles_repo.value != "" ? data.coder_parameter.dotfiles_repo.value : null
+    GIT_AUTHOR_NAME              = "${data.coder_workspace_owner.me.full_name}"
+    GIT_COMMITTER_NAME           = "${data.coder_workspace_owner.me.full_name}"
+    GIT_AUTHOR_EMAIL             = "${data.coder_workspace_owner.me.email}"
+    GIT_COMMITTER_EMAIL          = "${data.coder_workspace_owner.me.email}"
+    CODER_MCP_APP_STATUS_SLUG    = "claude-code"
+    CODER_MCP_CLAUDE_TASK_PROMPT = data.coder_parameter.ai_prompt.value
+    DOTFILES_URI                 = data.coder_parameter.dotfiles_repo.value != "" ? data.coder_parameter.dotfiles_repo.value : null
 
   }, data.vault_generic_secret.dotenv.data, data.vault_generic_secret.claude_code.data)
 

@@ -160,12 +160,12 @@ module "devcontainers-cli" {
 }
 
 module "claude-code" {
-  source              = "registry.coder.com/modules/claude-code/coder"
-  version             = ">= 1.0.0"
-  agent_id            = coder_agent.main.id
-  folder              = "/home/${local.username}/${data.coder_workspace.main.name}"
-  install_claude_code = true
-  claude_code_version = "latest"
+  source                  = "registry.coder.com/modules/claude-code/coder"
+  version                 = ">= 1.0.0"
+  agent_id                = coder_agent.main.id
+  folder                  = "/home/${local.username}/${data.coder_workspace.main.name}"
+  install_claude_code     = true
+  claude_code_version     = "latest"
   experiment_use_screen   = true
   experiment_report_tasks = true
 }
@@ -276,12 +276,12 @@ resource "coder_agent" "main" {
   EOT
 
   env = merge({
-    GIT_AUTHOR_NAME     = "${data.coder_workspace_owner.me.full_name}"
-    GIT_COMMITTER_NAME  = "${data.coder_workspace_owner.me.full_name}"
-    GIT_AUTHOR_EMAIL    = "${data.coder_workspace_owner.me.email}"
-    GIT_COMMITTER_EMAIL = "${data.coder_workspace_owner.me.email}"
-    CODER_MCP_APP_STATUS_SLUG = "claude-code"
-    CODER_MCP_CLAUDE_TASK_PROMPT   = data.coder_parameter.ai_prompt.value
+    GIT_AUTHOR_NAME              = "${data.coder_workspace_owner.me.full_name}"
+    GIT_COMMITTER_NAME           = "${data.coder_workspace_owner.me.full_name}"
+    GIT_AUTHOR_EMAIL             = "${data.coder_workspace_owner.me.email}"
+    GIT_COMMITTER_EMAIL          = "${data.coder_workspace_owner.me.email}"
+    CODER_MCP_APP_STATUS_SLUG    = "claude-code"
+    CODER_MCP_CLAUDE_TASK_PROMPT = data.coder_parameter.ai_prompt.value
   }, data.vault_generic_secret.dotenv.data, data.vault_generic_secret.claude_code.data)
 
   metadata {

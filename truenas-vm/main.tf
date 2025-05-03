@@ -1,19 +1,19 @@
 terraform {
   required_providers {
     coder = {
-      source  = "coder/coder"
+      source = "coder/coder"
     }
     macaddress = {
-      source  = "ivoronin/macaddress"
+      source = "ivoronin/macaddress"
     }
     random = {
-      source  = "hashicorp/random"
+      source = "hashicorp/random"
     }
     truenas = {
-      source  = "dariusbakunas/truenas"
+      source = "dariusbakunas/truenas"
     }
     vault = {
-      source  = "hashicorp/vault"
+      source = "hashicorp/vault"
     }
   }
 }
@@ -89,9 +89,9 @@ data "vault_generic_secret" "dotenv" {
 }
 
 resource "coder_agent" "main" {
-  arch                   = data.coder_provisioner.me.arch
-  os                     = "linux"
-    startup_script         = <<-EOT
+  arch           = data.coder_provisioner.me.arch
+  os             = "linux"
+  startup_script = <<-EOT
     set -e
 
     # install and start code-server

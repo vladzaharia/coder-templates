@@ -1,14 +1,14 @@
 terraform {
   required_providers {
     coder = {
-      source  = "coder/coder"
-      
+      source = "coder/coder"
+
     }
     azurerm = {
-      source  = "hashicorp/azurerm"
+      source = "hashicorp/azurerm"
     }
     vault = {
-      source  = "hashicorp/vault"
+      source = "hashicorp/vault"
     }
   }
 }
