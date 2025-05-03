@@ -307,7 +307,7 @@ module "windsurf" {
   source   = "registry.coder.com/modules/windsurf/coder"
   version  = ">= 1.0.0"
   agent_id = coder_agent.main.id
-  folder   = "/workspaces/${data.coder_workspace.name}.git"
+  folder   = "/workspaces/${data.coder_workspace.main.name}.git"
   order    = 40
 }
 

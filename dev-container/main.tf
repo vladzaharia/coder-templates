@@ -145,6 +145,14 @@ data "coder_parameter" "vault_project" {
   mutable      = false
 }
 
+data "coder_parameter" "ai_prompt" {
+  type        = "string"
+  name        = "AI Prompt"
+  default     = ""
+  description = "Write a prompt for Claude Code"
+  mutable     = true
+}
+
 data "vault_generic_secret" "dotenv" {
   path = "dotenv/${data.coder_parameter.vault_project.value != "" ? data.coder_parameter.vault_project.value : "_empty"}/dev"
 }
@@ -163,7 +171,7 @@ module "claude-code" {
   source                  = "registry.coder.com/modules/claude-code/coder"
   version                 = ">= 1.0.0"
   agent_id                = coder_agent.main.id
-  folder                  = "/home/${local.username}/${data.coder_workspace.main.name}"
+  folder                  = "/workspaces/${data.coder_workspace.name}.git"
   install_claude_code     = true
   claude_code_version     = "latest"
   experiment_use_screen   = true
@@ -191,7 +199,7 @@ module "code-server" {
   order                   = 10
   agent_id                = coder_agent.main.id
   auto_install_extensions = true
-  folder                  = "/workspaces/${data.coder_workspace.name}.git"
+  folder                  = "/workspaces/${data.coder_workspace.main.name}.git"
   settings = {
     "workbench.activityBar.location" = "top",
     "editor.fontFamily"              = "'MonoLisa Nerd Font', MonoLisa, Menlo, Monaco, 'Courier New', monospace",
@@ -209,7 +217,7 @@ module "vscode-web" {
   order                   = 25
   accept_license          = true
   auto_install_extensions = true
-  folder                  = "/workspaces/${data.coder_workspace.name}.git"
+  folder                  = "/workspaces/${data.coder_workspace.main.name}.git"
   settings = {
     "workbench.activityBar.location" = "top",
     "editor.fontFamily"              = "'MonoLisa Nerd Font', MonoLisa, Menlo, Monaco, 'Courier New', monospace",
@@ -224,7 +232,7 @@ module "windsurf" {
   source   = "registry.coder.com/modules/windsurf/coder"
   version  = ">= 1.0.0"
   agent_id = coder_agent.main.id
-  folder   = "/workspaces/${data.coder_workspace.name}.git"
+  folder   = "/workspaces/${data.coder_workspace.main.name}.git"
   order    = 40
 }
 
@@ -236,8 +244,7 @@ module "jetbrains_gateway" {
   default        = "IU"
 
   # Default folder to open when starting a JetBrains IDE
-  folder = "/home/${local.username}/${module.git_clone.folder_name}"
-
+  folder = "/workspaces/${data.coder_workspace.name}.git"
 
   agent_id   = coder_agent.main.id
   agent_name = "main"

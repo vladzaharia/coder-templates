@@ -144,7 +144,6 @@ module "coder-login" {
 }
 
 module "kasmvnc" {
-  count               = data.coder_workspace.me.start_count
   source              = "registry.coder.com/modules/kasmvnc/coder"
   version             = ">= 1.0.0"
   agent_id            = coder_agent.main.id
@@ -152,7 +151,6 @@ module "kasmvnc" {
 }
 
 module "filebrowser" {
-  count    = data.coder_workspace.me.start_count
   source   = "registry.coder.com/modules/filebrowser/coder"
   version  = ">= 1.0.0"
   agent_id = coder_agent.main.id

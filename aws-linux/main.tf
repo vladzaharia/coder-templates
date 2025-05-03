@@ -198,8 +198,8 @@ provider "aws" {
   secret_key = data.vault_aws_access_credentials.client_info.secret_key
 }
 
-data "coder_workspace" "me" {
-}
+data "coder_workspace" "main" {}
+data "coder_workspace_owner" "me" {}
 
 data "aws_ami" "ubuntu" {
   most_recent = true
@@ -284,7 +284,7 @@ locals {
   user_data = templatefile("cloud-config.yaml.tftpl", {
     username    = local.linux_user
     init_script = base64encode(coder_agent.dev.init_script)
-    hostname    = lower(data.coder_workspace.me.name)
+    hostname    = lower(data.coder_workspace.main.name)
   })
 }
 
@@ -295,7 +295,7 @@ resource "aws_instance" "dev" {
 
   user_data = local.user_data
   tags = {
-    Name = "coder-${data.coder_workspace_owner.me.owner.name}-${data.coder_workspace.me.name}"
+    Name = "coder-${data.coder_workspace_owner.me.owner.name}-${data.coder_workspace.main.name}"
     # Required if you are using our example policy, see template README
     Coder_Provisioned = "true"
   }
@@ -323,5 +323,5 @@ resource "coder_metadata" "workspace_info" {
 
 resource "aws_ec2_instance_state" "dev" {
   instance_id = aws_instance.dev.id
-  state       = data.coder_workspace.me.transition == "start" ? "running" : "stopped"
+  state       = data.coder_workspace.main.transition == "start" ? "running" : "stopped"
 }
