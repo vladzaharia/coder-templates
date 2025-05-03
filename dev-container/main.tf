@@ -171,7 +171,7 @@ module "claude-code" {
   source                  = "registry.coder.com/modules/claude-code/coder"
   version                 = ">= 1.0.0"
   agent_id                = coder_agent.main.id
-  folder                  = "/workspaces/${data.coder_workspace.name}.git"
+  folder                  = "/workspaces/${data.coder_workspace.main.name}.git"
   install_claude_code     = true
   claude_code_version     = "latest"
   experiment_use_screen   = true
@@ -244,7 +244,7 @@ module "jetbrains_gateway" {
   default        = "IU"
 
   # Default folder to open when starting a JetBrains IDE
-  folder = "/workspaces/${data.coder_workspace.name}.git"
+  folder = "/workspaces/${data.coder_workspace.main.name}.git"
 
   agent_id   = coder_agent.main.id
   agent_name = "main"

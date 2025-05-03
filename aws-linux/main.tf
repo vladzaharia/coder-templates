@@ -232,10 +232,10 @@ resource "coder_agent" "dev" {
   EOT
 
   env = {
-    GIT_AUTHOR_NAME     = "${data.coder_workspace_owner.me.owner.name}"
-    GIT_COMMITTER_NAME  = "${data.coder_workspace_owner.me.owner.name}"
-    GIT_AUTHOR_EMAIL    = "${data.coder_workspace_owner.me.owner.name_email}"
-    GIT_COMMITTER_EMAIL = "${data.coder_workspace_owner.me.owner.name_email}"
+    GIT_AUTHOR_NAME     = "${data.coder_workspace_owner.me.name}"
+    GIT_COMMITTER_NAME  = "${data.coder_workspace_owner.me.name}"
+    GIT_AUTHOR_EMAIL    = "${data.coder_workspace_owner.me.name_email}"
+    GIT_COMMITTER_EMAIL = "${data.coder_workspace_owner.me.name_email}"
     DOTFILES_URI        = data.coder_parameter.dotfiles_repo.value != "" ? data.coder_parameter.dotfiles_repo.value : null
     CODER_ENV           = "true"
   }
@@ -280,7 +280,7 @@ resource "coder_app" "code-server" {
 }
 
 locals {
-  linux_user = data.coder_workspace_owner.me.owner.name
+  linux_user = data.coder_workspace_owner.me.name
   user_data = templatefile("cloud-config.yaml.tftpl", {
     username    = local.linux_user
     init_script = base64encode(coder_agent.dev.init_script)
@@ -295,7 +295,7 @@ resource "aws_instance" "dev" {
 
   user_data = local.user_data
   tags = {
-    Name = "coder-${data.coder_workspace_owner.me.owner.name}-${data.coder_workspace.main.name}"
+    Name = "coder-${data.coder_workspace_owner.me.name}-${data.coder_workspace.main.name}"
     # Required if you are using our example policy, see template README
     Coder_Provisioned = "true"
   }

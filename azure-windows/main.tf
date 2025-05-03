@@ -234,8 +234,8 @@ resource "random_password" "admin_password" {
 }
 
 locals {
-  prefix         = "coder-${data.coder_workspace_owner.me.owner.name}-${data.coder_workspace.main.name}"
-  admin_username = data.coder_workspace_owner.me.owner.name
+  prefix         = "coder-${data.coder_workspace_owner.me.name}-${data.coder_workspace.main.name}"
+  admin_username = data.coder_workspace_owner.me.name
 }
 
 resource "azurerm_resource_group" "main" {
@@ -254,7 +254,7 @@ resource "azurerm_public_ip" "main" {
   tags = {
     Coder_Provisioned = "true"
     Workspace         = data.coder_workspace.main.id
-    Owner             = data.coder_workspace_owner.me.owner.name
+    Owner             = data.coder_workspace_owner.me.name
   }
 }
 resource "azurerm_virtual_network" "main" {
@@ -265,7 +265,7 @@ resource "azurerm_virtual_network" "main" {
   tags = {
     Coder_Provisioned = "true"
     Workspace         = data.coder_workspace.main.id
-    Owner             = data.coder_workspace_owner.me.owner.name
+    Owner             = data.coder_workspace_owner.me.name
   }
 }
 resource "azurerm_subnet" "internal" {
@@ -287,7 +287,7 @@ resource "azurerm_network_interface" "main" {
   tags = {
     Coder_Provisioned = "true"
     Workspace         = data.coder_workspace.main.id
-    Owner             = data.coder_workspace_owner.me.owner.name
+    Owner             = data.coder_workspace_owner.me.name
   }
 }
 # Create storage account for boot diagnostics
@@ -301,7 +301,7 @@ resource "azurerm_storage_account" "boot_diagnostics" {
   tags = {
     Coder_Provisioned = "true"
     Workspace         = data.coder_workspace.main.id
-    Owner             = data.coder_workspace_owner.me.owner.name
+    Owner             = data.coder_workspace_owner.me.name
   }
 }
 # Generate random text for a unique storage account name
@@ -324,7 +324,7 @@ resource "azurerm_managed_disk" "data_disk" {
   tags = {
     Coder_Provisioned = "true"
     Workspace         = data.coder_workspace.main.id
-    Owner             = data.coder_workspace_owner.me.owner.name
+    Owner             = data.coder_workspace_owner.me.name
   }
 }
 
@@ -367,7 +367,7 @@ resource "azurerm_windows_virtual_machine" "main" {
   tags = {
     Coder_Provisioned = "true"
     Workspace         = data.coder_workspace.main.id
-    Owner             = data.coder_workspace_owner.me.owner.name
+    Owner             = data.coder_workspace_owner.me.name
   }
 }
 

@@ -248,10 +248,10 @@ resource "coder_agent" "main" {
   EOT
 
   env = {
-    GIT_AUTHOR_NAME     = "${data.coder_workspace_owner.me.owner.name}"
-    GIT_COMMITTER_NAME  = "${data.coder_workspace_owner.me.owner.name}"
-    GIT_AUTHOR_EMAIL    = "${data.coder_workspace_owner.me.owner.name_email}"
-    GIT_COMMITTER_EMAIL = "${data.coder_workspace_owner.me.owner.name_email}"
+    GIT_AUTHOR_NAME     = "${data.coder_workspace_owner.me.name}"
+    GIT_COMMITTER_NAME  = "${data.coder_workspace_owner.me.name}"
+    GIT_AUTHOR_EMAIL    = "${data.coder_workspace_owner.me.name_email}"
+    GIT_COMMITTER_EMAIL = "${data.coder_workspace_owner.me.name_email}"
     DOTFILES_URI        = data.coder_parameter.dotfiles_repo.value != "" ? data.coder_parameter.dotfiles_repo.value : null
     CODER_ENV           = "true"
   }
@@ -286,16 +286,16 @@ resource "coder_agent" "main" {
     script       = <<-EOT
       #!/bin/bash
       set -e
-      df /home/${data.coder_workspace_owner.me.owner.name} | awk '$NF=="/"{printf "%s", $5}'
+      df /home/${data.coder_workspace_owner.me.name} | awk '$NF=="/"{printf "%s", $5}'
     EOT
   }
 }
 
 locals {
-  prefix = "coder-${data.coder_workspace_owner.me.owner.name}-${data.coder_workspace.main.name}"
+  prefix = "coder-${data.coder_workspace_owner.me.name}-${data.coder_workspace.main.name}"
 
   userdata = templatefile("cloud-config.yaml.tftpl", {
-    username    = data.coder_workspace_owner.me.owner.name
+    username    = data.coder_workspace_owner.me.name
     init_script = base64encode(coder_agent.main.init_script)
     hostname    = lower(data.coder_workspace.main.name)
   })
@@ -308,7 +308,7 @@ resource "azurerm_resource_group" "main" {
   tags = {
     Coder_Provisioned = "true"
     Workspace         = data.coder_workspace.main.id
-    Owner             = data.coder_workspace_owner.me.owner.name
+    Owner             = data.coder_workspace_owner.me.name
   }
 }
 
@@ -332,7 +332,7 @@ resource "azurerm_virtual_network" "main" {
   tags = {
     Coder_Provisioned = "true"
     Workspace         = data.coder_workspace.main.id
-    Owner             = data.coder_workspace_owner.me.owner.name
+    Owner             = data.coder_workspace_owner.me.name
   }
 }
 
@@ -358,7 +358,7 @@ resource "azurerm_network_interface" "main" {
   tags = {
     Coder_Provisioned = "true"
     Workspace         = data.coder_workspace.main.id
-    Owner             = data.coder_workspace_owner.me.owner.name
+    Owner             = data.coder_workspace_owner.me.name
   }
 }
 
@@ -373,7 +373,7 @@ resource "azurerm_storage_account" "boot_diagnostics" {
   tags = {
     Coder_Provisioned = "true"
     Workspace         = data.coder_workspace.main.id
-    Owner             = data.coder_workspace_owner.me.owner.name
+    Owner             = data.coder_workspace_owner.me.name
   }
 }
 # Generate random text for a unique storage account name
@@ -396,7 +396,7 @@ resource "azurerm_managed_disk" "home" {
   tags = {
     Coder_Provisioned = "true"
     Workspace         = data.coder_workspace.main.id
-    Owner             = data.coder_workspace_owner.me.owner.name
+    Owner             = data.coder_workspace_owner.me.name
   }
 }
 
@@ -414,10 +414,10 @@ resource "azurerm_linux_virtual_machine" "main" {
   location            = azurerm_resource_group.main.location
   size                = data.coder_parameter.instance_type.value
   // cloud-init overwrites this, so the value here doesn't matter
-  admin_username = data.coder_workspace_owner.me.owner.name
+  admin_username = data.coder_workspace_owner.me.name
   admin_ssh_key {
     public_key = tls_private_key.dummy.public_key_openssh
-    username   = data.coder_workspace_owner.me.owner.name
+    username   = data.coder_workspace_owner.me.name
   }
 
   network_interface_ids = [
@@ -443,7 +443,7 @@ resource "azurerm_linux_virtual_machine" "main" {
   tags = {
     Coder_Provisioned = "true"
     Workspace         = data.coder_workspace.main.id
-    Owner             = data.coder_workspace_owner.me.owner.name
+    Owner             = data.coder_workspace_owner.me.name
   }
 }
 
@@ -468,7 +468,7 @@ resource "coder_metadata" "workspace_info" {
   }
   item {
     key   = "username"
-    value = data.coder_workspace_owner.me.owner.name
+    value = data.coder_workspace_owner.me.name
   }
 }
 
