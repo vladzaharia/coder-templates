@@ -1,16 +1,13 @@
 terraform {
   required_providers {
     coder = {
-      source  = "coder/coder"
-      version = "> 0.7.0, < 1.0.0"
+      source = "coder/coder"
     }
     docker = {
-      source  = "kreuzwerker/docker"
-      version = "> 3.0.0, < 4.0.0"
+      source = "kreuzwerker/docker"
     }
     vault = {
-      source  = "hashicorp/vault"
-      version = "> 3.20.0, < 4.0.0"
+      source = "hashicorp/vault"
     }
   }
 }
@@ -72,21 +69,15 @@ locals {
   }
 }
 
+provider "docker" {}
+
 data "coder_external_auth" "github" {
   id = "github"
 }
 
-data "coder_provisioner" "me" {
-}
-
-provider "docker" {
-}
-
-data "coder_workspace" "main" {
-}
-
-data "coder_workspace_owner" "me" {
-}
+data "coder_provisioner" "me" {}
+data "coder_workspace" "main" {}
+data "coder_workspace_owner" "me" {}
 
 data "coder_parameter" "size" {
   order        = 0
@@ -253,9 +244,24 @@ data "vault_generic_secret" "dotenv" {
   path = "dotenv/${data.coder_parameter.vault_project.value != "" ? data.coder_parameter.vault_project.value : "_empty"}/dev"
 }
 
+data "vault_generic_secret" "claude_code" {
+  path = "dotenv/coder-claude-code/dev"
+}
+
+module "claude-code" {
+  source                  = "registry.coder.com/modules/claude-code/coder"
+  version                 = ">= 1.0.0"
+  agent_id                = coder_agent.main.id
+  folder                  = "/home/${local.username}/${data.coder_workspace.main.name}"
+  install_claude_code     = true
+  claude_code_version     = "latest"
+  experiment_use_screen   = true
+  experiment_report_tasks = true
+}
+
 module "git-config" {
   source                = "registry.coder.com/modules/git-config/coder"
-  version               = "1.0.12"
+  version               = ">= 1.0.0"
   agent_id              = coder_agent.main.id
   allow_username_change = false
   allow_email_change    = false
@@ -263,27 +269,27 @@ module "git-config" {
 
 module "git_clone" {
   source   = "registry.coder.com/modules/git-clone/coder"
-  version  = "1.0.12"
+  version  = ">= 1.0.0"
   agent_id = coder_agent.main.id
   url      = "https://github.com/${data.coder_parameter.github_repo.value}"
 }
 
 module "git-commit-signing" {
   source   = "registry.coder.com/modules/git-commit-signing/coder"
-  version  = "1.0.11"
+  version  = ">= 1.0.0"
   agent_id = coder_agent.main.id
 }
 
 module "dotfiles" {
-  source   = "registry.coder.com/modules/dotfiles/coder"
-  version  = "1.0.14"
-  agent_id = coder_agent.main.id
+  source       = "registry.coder.com/modules/dotfiles/coder"
+  version      = ">= 1.0.0"
+  agent_id     = coder_agent.main.id
   dotfiles_uri = "https://github.com/${data.coder_parameter.dotfiles_repo.value}"
 }
 
 module "code-server" {
   source                  = "registry.coder.com/modules/code-server/coder"
-  version                 = "1.0.14"
+  version                 = ">= 1.0.0"
   display_name            = "VS Code Server"
   order                   = 10
   agent_id                = coder_agent.main.id
@@ -301,7 +307,7 @@ module "code-server" {
 
 module "vscode-web" {
   source                  = "registry.coder.com/modules/vscode-web/coder"
-  version                 = "1.0.14"
+  version                 = ">= 1.0.0"
   order                   = 25
   agent_id                = coder_agent.main.id
   accept_license          = true
@@ -315,6 +321,30 @@ module "vscode-web" {
     "git.autofetch"                  = true,
     "git.confirmSync"                = false,
   }
+}
+
+module "windsurf" {
+  source   = "registry.coder.com/modules/windsurf/coder"
+  version  = ">= 1.0.0"
+  agent_id = coder_agent.main.id
+  folder   = "/workspaces/${data.coder_workspace.main.name}.git"
+  order    = 40
+}
+
+module "jetbrains_gateway" {
+  source  = "registry.coder.com/modules/jetbrains-gateway/coder"
+  version = ">= 1.0.0"
+
+  jetbrains_ides = ["IU", "PS", "WS", "PY", "CL", "GO", "RM", "RD", "RR"]
+  default        = "IU"
+
+  # Default folder to open when starting a JetBrains IDE
+  folder = "/home/${local.username}/${module.git_clone.folder_name}"
+
+
+  agent_id   = coder_agent.main.id
+  agent_name = "main"
+  order      = 50
 }
 
 resource "coder_script" "npm" {
@@ -334,8 +364,16 @@ resource "coder_script" "npm" {
 
 module "coder-login" {
   source   = "registry.coder.com/modules/coder-login/coder"
-  version  = "1.0.2"
+  version  = ">= 1.0.0"
   agent_id = coder_agent.main.id
+}
+
+data "coder_parameter" "ai_prompt" {
+  type        = "string"
+  name        = "AI Prompt"
+  default     = ""
+  description = "Write a prompt for Claude Code"
+  mutable     = true
 }
 
 resource "coder_agent" "main" {
@@ -343,13 +381,27 @@ resource "coder_agent" "main" {
   os   = "linux"
 
   env = merge({
-    GIT_AUTHOR_NAME     = "${data.coder_workspace_owner.me.full_name}"
-    GIT_COMMITTER_NAME  = "${data.coder_workspace_owner.me.full_name}"
-    GIT_AUTHOR_EMAIL    = "${data.coder_workspace_owner.me.email}"
-    GIT_COMMITTER_EMAIL = "${data.coder_workspace_owner.me.email}"
-    GITHUB_TOKEN        = "${data.coder_external_auth.github.access_token}"
-    "DOTFILES_URI"      = data.coder_parameter.dotfiles_repo.value != "" ? data.coder_parameter.dotfiles_repo.value : null
-  }, data.vault_generic_secret.dotenv.data)
+    GIT_AUTHOR_NAME              = "${data.coder_workspace_owner.me.full_name}"
+    GIT_COMMITTER_NAME           = "${data.coder_workspace_owner.me.full_name}"
+    GIT_AUTHOR_EMAIL             = "${data.coder_workspace_owner.me.email}"
+    GIT_COMMITTER_EMAIL          = "${data.coder_workspace_owner.me.email}"
+    GITHUB_TOKEN                 = "${data.coder_external_auth.github.access_token}"
+    CODER_MCP_APP_STATUS_SLUG    = "claude-code"
+    CODER_MCP_CLAUDE_TASK_PROMPT = data.coder_parameter.ai_prompt.value
+    DOTFILES_URI                 = data.coder_parameter.dotfiles_repo.value != "" ? data.coder_parameter.dotfiles_repo.value : null
+  }, data.vault_generic_secret.dotenv.data, data.vault_generic_secret.claude_code.data)
+
+  startup_script = <<-EOT
+    set -e
+
+    # Prepare user home with default files on first start.
+    if [ ! -f ~/.init_done ]; then
+      cp -rT /etc/skel ~
+      touch ~/.init_done
+    fi
+
+    # Add any commands that should be executed at workspace startup (e.g install requirements, start a program, etc) here
+  EOT
 
   metadata {
     display_name = "CPU Usage"
@@ -385,7 +437,7 @@ resource "coder_app" "blink" {
   url          = "blinkshell://run?key=12BA15&cmd=code ${data.coder_workspace.main.access_url}/@${data.coder_workspace_owner.me.name}/${data.coder_workspace.main.name}.main/apps/code-server/"
   icon         = "https://assets.polaris.rest/Logos/blink_alt.svg"
   external     = true
-  order        = 50
+  order        = 100
 }
 
 resource "docker_volume" "home_volume" {

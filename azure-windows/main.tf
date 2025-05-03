@@ -1,16 +1,14 @@
 terraform {
   required_providers {
     coder = {
-      source  = "coder/coder"
-      version = "> 0.7.0, < 1.0.0"
+      source = "coder/coder"
+
     }
     azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "> 3.0.0, < 4.0.0"
+      source = "hashicorp/azurerm"
     }
     vault = {
-      source  = "hashicorp/vault"
-      version = "> 3.20.0, < 4.0.0"
+      source = "hashicorp/vault"
     }
   }
 }
@@ -76,10 +74,9 @@ provider "azurerm" {
   subscription_id = local.subscription_id
 }
 
-provider "coder" {
-}
-
-data "coder_workspace" "me" {}
+provider "coder" {}
+data "coder_workspace" "main" {}
+data "coder_workspace_owner" "me" {}
 
 data "coder_parameter" "location" {
   name         = "location"
@@ -237,8 +234,8 @@ resource "random_password" "admin_password" {
 }
 
 locals {
-  prefix         = "coder-${data.coder_workspace.me.owner}-${data.coder_workspace.me.name}"
-  admin_username = data.coder_workspace.me.owner
+  prefix         = "coder-${data.coder_workspace_owner.me.name}-${data.coder_workspace.main.name}"
+  admin_username = data.coder_workspace_owner.me.name
 }
 
 resource "azurerm_resource_group" "main" {
@@ -256,8 +253,8 @@ resource "azurerm_public_ip" "main" {
   allocation_method   = "Static"
   tags = {
     Coder_Provisioned = "true"
-    Workspace         = data.coder_workspace.me.id
-    Owner             = data.coder_workspace.me.owner
+    Workspace         = data.coder_workspace.main.id
+    Owner             = data.coder_workspace_owner.me.name
   }
 }
 resource "azurerm_virtual_network" "main" {
@@ -267,8 +264,8 @@ resource "azurerm_virtual_network" "main" {
   resource_group_name = azurerm_resource_group.main.name
   tags = {
     Coder_Provisioned = "true"
-    Workspace         = data.coder_workspace.me.id
-    Owner             = data.coder_workspace.me.owner
+    Workspace         = data.coder_workspace.main.id
+    Owner             = data.coder_workspace_owner.me.name
   }
 }
 resource "azurerm_subnet" "internal" {
@@ -289,8 +286,8 @@ resource "azurerm_network_interface" "main" {
   }
   tags = {
     Coder_Provisioned = "true"
-    Workspace         = data.coder_workspace.me.id
-    Owner             = data.coder_workspace.me.owner
+    Workspace         = data.coder_workspace.main.id
+    Owner             = data.coder_workspace_owner.me.name
   }
 }
 # Create storage account for boot diagnostics
@@ -303,8 +300,8 @@ resource "azurerm_storage_account" "boot_diagnostics" {
 
   tags = {
     Coder_Provisioned = "true"
-    Workspace         = data.coder_workspace.me.id
-    Owner             = data.coder_workspace.me.owner
+    Workspace         = data.coder_workspace.main.id
+    Owner             = data.coder_workspace_owner.me.name
   }
 }
 # Generate random text for a unique storage account name
@@ -326,14 +323,14 @@ resource "azurerm_managed_disk" "data_disk" {
 
   tags = {
     Coder_Provisioned = "true"
-    Workspace         = data.coder_workspace.me.id
-    Owner             = data.coder_workspace.me.owner
+    Workspace         = data.coder_workspace.main.id
+    Owner             = data.coder_workspace_owner.me.name
   }
 }
 
 # Create virtual machine
 resource "azurerm_windows_virtual_machine" "main" {
-  count                 = data.coder_workspace.me.transition == "start" ? 1 : 0
+  count                 = data.coder_workspace.main.transition == "start" ? 1 : 0
   name                  = "${local.prefix}-vm"
   computer_name         = "coder-vm"
   admin_username        = local.admin_username
@@ -369,8 +366,8 @@ resource "azurerm_windows_virtual_machine" "main" {
   }
   tags = {
     Coder_Provisioned = "true"
-    Workspace         = data.coder_workspace.me.id
-    Owner             = data.coder_workspace.me.owner
+    Workspace         = data.coder_workspace.main.id
+    Owner             = data.coder_workspace_owner.me.name
   }
 }
 
@@ -384,7 +381,7 @@ resource "coder_app" "rdp" {
 }
 
 resource "coder_metadata" "rdp" {
-  count       = data.coder_workspace.me.transition == "start" ? 1 : 0
+  count       = data.coder_workspace.main.transition == "start" ? 1 : 0
   resource_id = azurerm_windows_virtual_machine.main[0].id
   item {
     key   = "region"
@@ -415,7 +412,7 @@ resource "coder_metadata" "data_info" {
 }
 
 resource "azurerm_virtual_machine_data_disk_attachment" "main_data" {
-  count              = data.coder_workspace.me.transition == "start" ? 1 : 0
+  count              = data.coder_workspace.main.transition == "start" ? 1 : 0
   managed_disk_id    = azurerm_managed_disk.data_disk.id
   virtual_machine_id = azurerm_windows_virtual_machine.main[0].id
   lun                = "10"

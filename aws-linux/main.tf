@@ -1,20 +1,16 @@
 terraform {
   required_providers {
     coder = {
-      source  = "coder/coder"
-      version = "> 0.7.0, < 1.0.0"
+      source = "coder/coder"
     }
     aws = {
-      source  = "hashicorp/aws"
-      version = "> 5.0.0, < 6.0.0"
+      source = "hashicorp/aws"
     }
     random = {
-      source  = "hashicorp/random"
-      version = "> 3.0.0, < 4.0.0"
+      source = "hashicorp/random"
     }
     vault = {
-      source  = "hashicorp/vault"
-      version = "> 3.20.0, < 4.0.0"
+      source = "hashicorp/vault"
     }
   }
 }
@@ -202,8 +198,8 @@ provider "aws" {
   secret_key = data.vault_aws_access_credentials.client_info.secret_key
 }
 
-data "coder_workspace" "me" {
-}
+data "coder_workspace" "main" {}
+data "coder_workspace_owner" "me" {}
 
 data "aws_ami" "ubuntu" {
   most_recent = true
@@ -219,10 +215,10 @@ data "aws_ami" "ubuntu" {
 }
 
 resource "coder_agent" "dev" {
-  arch                   = "amd64"
-  auth                   = "aws-instance-identity"
-  os                     = "linux"
-    startup_script         = <<-EOT
+  arch           = "amd64"
+  auth           = "aws-instance-identity"
+  os             = "linux"
+  startup_script = <<-EOT
     set -e
 
     # install and start code-server
@@ -236,10 +232,10 @@ resource "coder_agent" "dev" {
   EOT
 
   env = {
-    GIT_AUTHOR_NAME     = "${data.coder_workspace.me.owner}"
-    GIT_COMMITTER_NAME  = "${data.coder_workspace.me.owner}"
-    GIT_AUTHOR_EMAIL    = "${data.coder_workspace.me.owner_email}"
-    GIT_COMMITTER_EMAIL = "${data.coder_workspace.me.owner_email}"
+    GIT_AUTHOR_NAME     = "${data.coder_workspace_owner.me.name}"
+    GIT_COMMITTER_NAME  = "${data.coder_workspace_owner.me.name}"
+    GIT_AUTHOR_EMAIL    = "${data.coder_workspace_owner.me.email}"
+    GIT_COMMITTER_EMAIL = "${data.coder_workspace_owner.me.email}"
     DOTFILES_URI        = data.coder_parameter.dotfiles_repo.value != "" ? data.coder_parameter.dotfiles_repo.value : null
     CODER_ENV           = "true"
   }
@@ -284,11 +280,11 @@ resource "coder_app" "code-server" {
 }
 
 locals {
-  linux_user = data.coder_workspace.me.owner
+  linux_user = data.coder_workspace_owner.me.name
   user_data = templatefile("cloud-config.yaml.tftpl", {
     username    = local.linux_user
     init_script = base64encode(coder_agent.dev.init_script)
-    hostname    = lower(data.coder_workspace.me.name)
+    hostname    = lower(data.coder_workspace.main.name)
   })
 }
 
@@ -299,7 +295,7 @@ resource "aws_instance" "dev" {
 
   user_data = local.user_data
   tags = {
-    Name = "coder-${data.coder_workspace.me.owner}-${data.coder_workspace.me.name}"
+    Name = "coder-${data.coder_workspace_owner.me.name}-${data.coder_workspace.main.name}"
     # Required if you are using our example policy, see template README
     Coder_Provisioned = "true"
   }
@@ -327,5 +323,5 @@ resource "coder_metadata" "workspace_info" {
 
 resource "aws_ec2_instance_state" "dev" {
   instance_id = aws_instance.dev.id
-  state       = data.coder_workspace.me.transition == "start" ? "running" : "stopped"
+  state       = data.coder_workspace.main.transition == "start" ? "running" : "stopped"
 }

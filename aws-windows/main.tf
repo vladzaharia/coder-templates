@@ -1,16 +1,13 @@
 terraform {
   required_providers {
     coder = {
-      source  = "coder/coder"
-      version = "> 0.7.0, < 1.0.0"
+      source = "coder/coder"
     }
     aws = {
-      source  = "hashicorp/aws"
-      version = "> 5.0.0, < 6.0.0"
+      source = "hashicorp/aws"
     }
     vault = {
-      source  = "hashicorp/vault"
-      version = "> 3.20.0, < 4.0.0"
+      source = "hashicorp/vault"
     }
   }
 }
@@ -188,8 +185,8 @@ provider "aws" {
   secret_key = data.vault_aws_access_credentials.client_info.secret_key
 }
 
-data "coder_workspace" "me" {
-}
+data "coder_workspace" "main" {}
+data "coder_workspace_owner" "me" {}
 
 data "aws_ami" "windows" {
   most_recent = true
@@ -245,7 +242,7 @@ resource "coder_metadata" "private-key" {
 }
 
 resource "aws_key_pair" "dev" {
-  key_name   = "coder-${data.coder_workspace.me.owner}-${data.coder_workspace.me.name}-key-pair"
+  key_name   = "coder-${data.coder_workspace_owner.me.name}-${data.coder_workspace.main.name}-key-pair"
   public_key = tls_private_key.rsa.public_key_openssh
 }
 
@@ -253,7 +250,7 @@ resource "coder_metadata" "key-pair" {
   resource_id = aws_key_pair.dev.id
   item {
     key   = "name"
-    value = "coder-${data.coder_workspace.me.owner}-${data.coder_workspace.me.name}-key-pair"
+    value = "coder-${data.coder_workspace_owner.me.name}-${data.coder_workspace.main.name}-key-pair"
   }
 }
 
@@ -261,7 +258,7 @@ resource "aws_vpc" "dev" {
   cidr_block = "172.16.0.0/16"
 
   tags = {
-    Name = "coder-${data.coder_workspace.me.owner}-${data.coder_workspace.me.name}-vpc"
+    Name = "coder-${data.coder_workspace_owner.me.name}-${data.coder_workspace.main.name}-vpc"
   }
 }
 
@@ -269,7 +266,7 @@ resource "coder_metadata" "vpc" {
   resource_id = aws_vpc.dev.id
   item {
     key   = "name"
-    value = "coder-${data.coder_workspace.me.owner}-${data.coder_workspace.me.name}-vpc"
+    value = "coder-${data.coder_workspace_owner.me.name}-${data.coder_workspace.main.name}-vpc"
   }
   item {
     key   = "cidr block"
@@ -283,7 +280,7 @@ resource "aws_subnet" "dev" {
   availability_zone = local.availability_zone
 
   tags = {
-    Name = "coder-${data.coder_workspace.me.owner}-${data.coder_workspace.me.name}-subnet"
+    Name = "coder-${data.coder_workspace_owner.me.name}-${data.coder_workspace.main.name}-subnet"
   }
 }
 
@@ -291,7 +288,7 @@ resource "coder_metadata" "subnet" {
   resource_id = aws_subnet.dev.id
   item {
     key   = "name"
-    value = "coder-${data.coder_workspace.me.owner}-${data.coder_workspace.me.name}-subnet"
+    value = "coder-${data.coder_workspace_owner.me.name}-${data.coder_workspace.main.name}-subnet"
   }
   item {
     key   = "cidr block"
@@ -300,7 +297,7 @@ resource "coder_metadata" "subnet" {
 }
 
 # resource "aws_security_group" "allow_rdp" {
-#   name        = "coder-${data.coder_workspace.me.owner}-${data.coder_workspace.me.name}-allow-rdp"
+#   name        = "coder-${data.coder_workspace_owner.me.name}-${data.coder_workspace.main.name}-allow-rdp"
 #   description = "Allow RDP inbound traffic"
 #   vpc_id      = aws_vpc.dev.id
 
@@ -325,7 +322,7 @@ resource "coder_metadata" "subnet" {
 # }
 
 resource "aws_security_group" "allow_all" {
-  name        = "coder-${data.coder_workspace.me.owner}-${data.coder_workspace.me.name}-allow-all"
+  name        = "coder-${data.coder_workspace_owner.me.name}-${data.coder_workspace.main.name}-allow-all"
   description = "Allow all inbound traffic"
   vpc_id      = aws_vpc.dev.id
 
@@ -357,10 +354,11 @@ resource "aws_instance" "dev" {
 
   key_name = aws_key_pair.dev.key_name
 
-  user_data = data.coder_workspace.me.transition == "start" ? local.user_data_start : local.user_data_end
+  user_data = data.coder_workspace.main.transition == "start" ? local.user_data_start : local.user_data_end
 
   get_password_data = true
   connection {
+    host     = self.public_ip
     type     = "winrm"
     port     = 5986
     password = rsadecrypt(self.password_data, tls_private_key.rsa.private_key_pem)
@@ -369,7 +367,7 @@ resource "aws_instance" "dev" {
   }
 
   tags = {
-    Name = "coder-${data.coder_workspace.me.owner}-${data.coder_workspace.me.name}"
+    Name = "coder-${data.coder_workspace_owner.me.name}-${data.coder_workspace.main.name}"
     # Required if you are using our example policy, see template README
     Coder_Provisioned = "true"
   }
