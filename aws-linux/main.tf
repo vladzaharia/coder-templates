@@ -234,8 +234,8 @@ resource "coder_agent" "dev" {
   env = {
     GIT_AUTHOR_NAME     = "${data.coder_workspace_owner.me.name}"
     GIT_COMMITTER_NAME  = "${data.coder_workspace_owner.me.name}"
-    GIT_AUTHOR_EMAIL    = "${data.coder_workspace_owner.me.name_email}"
-    GIT_COMMITTER_EMAIL = "${data.coder_workspace_owner.me.name_email}"
+    GIT_AUTHOR_EMAIL    = "${data.coder_workspace_owner.me.email}"
+    GIT_COMMITTER_EMAIL = "${data.coder_workspace_owner.me.email}"
     DOTFILES_URI        = data.coder_parameter.dotfiles_repo.value != "" ? data.coder_parameter.dotfiles_repo.value : null
     CODER_ENV           = "true"
   }
