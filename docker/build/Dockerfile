@@ -25,7 +25,7 @@ RUN curl -O https://starship.rs/install.sh && chmod +x install.sh && ./install.s
 RUN curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
 
 # Install Nodejs for Claude Code
-RUN (curl -fsSL https://deb.nodesource.com/setup_23.x | sh) && apt-get install -y nodejs;
+RUN (curl -fsSL https://deb.nodesource.com/setup_23.x | sh) && apt-get install -y nodejs && chmod -R 777 /usr/lib/node_modules/
 
 # Install Docker Engine
 ARG ENABLE_DIND=false
