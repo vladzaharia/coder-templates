@@ -119,7 +119,7 @@ data "coder_parameter" "de" {
   option {
     name  = "XFCE"
     value = "xfce"
-    icon  = "https://assets.polaris.rest/Logos/xfce-blanked.svg"
+    icon  = "https://assets.polaris.rest/logo/coder/xfce.svg"
   }
 
   option {
