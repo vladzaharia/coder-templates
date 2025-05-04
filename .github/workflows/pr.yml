@@ -70,12 +70,12 @@ jobs:
             TF_VAR_vault_role_id: ${{ secrets.VAULT_ROLE_ID }}
             # TF_VAR_vault_secret_id: ${{ env.VAULT_SECRET_ID }}
             TF_VAR_vault_secret_id: ${{ secrets.VAULT_SECRET_ID }}
-    
+  
   validate_template:
     needs: get_params
     name: Validate template
     runs-on: ubuntu-latest
-    if: ${{ needs.get_params.outputs.any_changed != 'false' }}
+    if: ${{ needs.get_params.outputs.any_changed != 'false' && !contains(needs.get_params.outputs.changed_files, '_common') }}
     permissions:
       id-token: write
     strategy:

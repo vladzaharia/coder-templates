@@ -63,24 +63,16 @@ jobs:
             echo "any_changed=true" >> $GITHUB_OUTPUT
           fi
 
-  deploy_template:
+  deploy_all_templates:
     needs: get_params
-    name: Deploy templates
+    name: Deploy all templates
     runs-on: ubuntu-latest
-    if: ${{ needs.get_params.outputs.any_changed != 'false' }}
+    if: ${{ contains(needs.get_params.outputs.changed_files, '_common') }}
     permissions:
       id-token: write
-    strategy:
-      fail-fast: false
-      matrix:
-        template: ${{ fromJson(needs.get_params.outputs.changed_files) }}
     steps:
       - name: Checkout files
         uses: actions/checkout@v3
-      - name: Download latest Coder binary
-        run: |
-          curl -fsSL "https://dev.coder.com/bin/coder-linux-amd64" -o "./coder"
-          chmod +x "./coder"
       # - name: Pull Vault secrets from Vault
       #   uses: hashicorp/vault-action@v2
       #   with:
@@ -94,14 +86,61 @@ jobs:
       #       /ci-cd/coder-templates/ci VAULT_SECRET_ID ;
       #       /ci-cd/coder-templates/ci CODER_SESSION_TOKEN
   
+      - name: Setup Coder
+        uses: coder/setup-action@v1
+        with:
+          access_url: 'https://code.polaris.rest'
+          # coder_session_token: ${{ env.CODER_SESSION_TOKEN }}
+          coder_session_token: ${{ secrets.CODER_SESSION_TOKEN }}
       - name: Push template
-        run: |
-            ./coder templates push $CODER_TEMPLATE_NAME --directory $CODER_TEMPLATE_DIR --yes --name=$CODER_TEMPLATE_VERSION --message="$CODER_TEMPLATE_MESSAGE" --variable vault_role_id="$VAULT_ROLE_ID" --variable vault_secret_id="$VAULT_SECRET_ID"
+        run: just deploy
+        env:
+            CODER_URL: https://code.polaris.rest
+            CODER_TEMPLATE_VERSION: ${{ needs.get_params.outputs.sha_short }}
+            CODER_TEMPLATE_MESSAGE: ${{ inputs.message || needs.get_params.outputs.pr_title }}
+            # VAULT_ROLE_ID: ${{ env.VAULT_ROLE_ID }}
+            VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
+            # VAULT_SECRET_ID: ${{ env.VAULT_SECRET_ID }}
+            VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
+
+  deploy_template:
+    needs: get_params
+    name: Deploy template
+    runs-on: ubuntu-latest
+    if: ${{ needs.get_params.outputs.any_changed != 'false' && !(contains(needs.get_params.outputs.changed_files, '_common')) }}
+    permissions:
+      id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        template: ${{ fromJson(needs.get_params.outputs.changed_files) }}
+    steps:
+      - name: Checkout files
+        uses: actions/checkout@v3
+      # - name: Pull Vault secrets from Vault
+      #   uses: hashicorp/vault-action@v2
+      #   with:
+      #     url: https://vault.polaris.rest
+      #     role: coder-templates
+      #     path: github
+      #     method: jwt
+      #     # jwtGithubAudience: sigstore
+      #     secrets: |
+      #       /ci-cd/coder-templates/ci VAULT_ROLE_ID ;
+      #       /ci-cd/coder-templates/ci VAULT_SECRET_ID ;
+      #       /ci-cd/coder-templates/ci CODER_SESSION_TOKEN
+  
+      - name: Setup Coder
+        uses: coder/setup-action@v1
+        with:
+          access_url: 'https://code.polaris.rest'
+          # coder_session_token: ${{ env.CODER_SESSION_TOKEN }}
+          coder_session_token: ${{ secrets.CODER_SESSION_TOKEN }}
+      - name: Push template
+        run: just deploy ${{ matrix.template }}
         if: ${{ !startsWith(matrix.template, '.') }}
         env:
             CODER_URL: https://code.polaris.rest
-            # CODER_SESSION_TOKEN: ${{ env.CODER_SESSION_TOKEN }}
-            CODER_SESSION_TOKEN: ${{ secrets.CODER_SESSION_TOKEN }}
             CODER_TEMPLATE_NAME: ${{ matrix.template }}
             CODER_TEMPLATE_VERSION: ${{ needs.get_params.outputs.sha_short }}
             CODER_TEMPLATE_DIR: ./${{ matrix.template }}
