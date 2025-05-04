@@ -287,64 +287,10 @@ module "dotfiles" {
   dotfiles_uri = "https://github.com/${data.coder_parameter.dotfiles_repo.value}"
 }
 
-module "code-server" {
-  source                  = "registry.coder.com/modules/code-server/coder"
-  version                 = ">= 1.0.0"
-  display_name            = "VS Code Server"
-  order                   = 10
-  agent_id                = coder_agent.main.id
-  auto_install_extensions = true
-  folder                  = "/home/${local.username}/${module.git_clone.folder_name}"
-  settings = {
-    "workbench.activityBar.location" = "top",
-    "editor.fontFamily"              = "'MonoLisa Nerd Font', MonoLisa, Menlo, Monaco, 'Courier New', monospace",
-    "workbench.iconTheme"            = "material-icon-theme",
-    "git.enableSmartCommit"          = true,
-    "git.autofetch"                  = true,
-    "git.confirmSync"                = false,
-  }
-}
-
-module "vscode-web" {
-  source                  = "registry.coder.com/modules/vscode-web/coder"
-  version                 = ">= 1.0.0"
-  order                   = 25
-  agent_id                = coder_agent.main.id
-  accept_license          = true
-  auto_install_extensions = true
-  folder                  = "/home/${local.username}/${module.git_clone.folder_name}"
-  settings = {
-    "workbench.activityBar.location" = "top",
-    "editor.fontFamily"              = "'MonoLisa Nerd Font', MonoLisa, Menlo, Monaco, 'Courier New', monospace",
-    "workbench.iconTheme"            = "material-icon-theme",
-    "git.enableSmartCommit"          = true,
-    "git.autofetch"                  = true,
-    "git.confirmSync"                = false,
-  }
-}
-
-module "windsurf" {
-  source   = "registry.coder.com/modules/windsurf/coder"
-  version  = ">= 1.0.0"
+module "coder_editors" {
+  source   = "../_common/editors"
   agent_id = coder_agent.main.id
-  folder   = "/workspaces/${data.coder_workspace.main.name}.git"
-  order    = 40
-}
-
-module "jetbrains_gateway" {
-  source  = "registry.coder.com/modules/jetbrains-gateway/coder"
-  version = ">= 1.0.0"
-
-  jetbrains_ides = ["IU", "PS", "WS", "PY", "CL", "GO", "RM", "RD", "RR"]
-  default        = "IU"
-
-  # Default folder to open when starting a JetBrains IDE
-  folder = "/home/${local.username}/${module.git_clone.folder_name}"
-
-
-  agent_id   = coder_agent.main.id
-  agent_name = "main"
-  order      = 50
+  path     = "/home/${local.username}/${module.git_clone.folder_name}"
 }
 
 resource "coder_script" "npm" {
@@ -428,16 +374,6 @@ resource "coder_agent" "main" {
     interval     = 1
     timeout      = 1
   }
-}
-
-resource "coder_app" "blink" {
-  agent_id     = coder_agent.main.id
-  slug         = "blink"
-  display_name = "Blink Shell"
-  url          = "blinkshell://run?key=12BA15&cmd=code ${data.coder_workspace.main.access_url}/@${data.coder_workspace_owner.me.name}/${data.coder_workspace.main.name}.main/apps/code-server/"
-  icon         = "https://assets.polaris.rest/Logos/blink_alt.svg"
-  external     = true
-  order        = 100
 }
 
 resource "docker_volume" "home_volume" {

@@ -6,9 +6,6 @@ terraform {
     docker = {
       source = "kreuzwerker/docker"
     }
-    vault = {
-      source = "hashicorp/vault"
-    }
   }
 }
 
@@ -30,20 +27,6 @@ variable "vault_secret_id" {
   validation {
     condition     = length(var.vault_secret_id) == 36
     error_message = "Invalid Vault Secret ID."
-  }
-}
-
-provider "vault" {
-  address          = "https://vault.polaris.rest"
-  skip_child_token = true
-
-  auth_login {
-    path = "auth/approle/login"
-
-    parameters = {
-      role_id   = var.vault_role_id
-      secret_id = var.vault_secret_id
-    }
   }
 }
 
@@ -217,24 +200,6 @@ data "coder_parameter" "dotfiles_repo" {
   mutable      = false
 }
 
-data "coder_parameter" "vault_project" {
-  order        = 200
-  name         = "vault_project"
-  display_name = "Vault project name"
-  description  = "Name of the project to retrieve and inject environment variables from"
-  icon         = "/icon/vault.svg"
-  default      = ""
-  mutable      = false
-}
-
-data "vault_generic_secret" "dotenv" {
-  path = "dotenv/${data.coder_parameter.vault_project.value != "" ? data.coder_parameter.vault_project.value : "_empty"}/dev"
-}
-
-data "vault_generic_secret" "claude_code" {
-  path = "dotenv/coder-claude-code/dev"
-}
-
 module "git-config" {
   source                = "registry.coder.com/modules/git-config/coder"
   version               = ">= 1.0.0"
@@ -249,17 +214,6 @@ module "git-commit-signing" {
   agent_id = coder_agent.main.id
 }
 
-module "claude-code" {
-  source                  = "registry.coder.com/modules/claude-code/coder"
-  version                 = ">= 1.0.0"
-  agent_id                = coder_agent.main.id
-  folder                  = "/home/${local.username}/${data.coder_workspace.main.name}"
-  install_claude_code     = true
-  claude_code_version     = "latest"
-  experiment_use_screen   = true
-  experiment_report_tasks = true
-}
-
 module "dotfiles" {
   source       = "registry.coder.com/modules/dotfiles/coder"
   version      = ">= 1.0.0"
@@ -267,65 +221,32 @@ module "dotfiles" {
   dotfiles_uri = "https://github.com/${data.coder_parameter.dotfiles_repo.value}"
 }
 
-module "code-server" {
-  source                  = "registry.coder.com/modules/code-server/coder"
-  version                 = ">= 1.0.0"
-  display_name            = "VS Code Server"
-  order                   = 10
-  agent_id                = coder_agent.main.id
-  auto_install_extensions = true
-  folder                  = "/home/${local.username}/${data.coder_workspace.main.name}"
-  settings = {
-    "workbench.activityBar.location" = "top",
-    "editor.fontFamily"              = "'MonoLisa Nerd Font', MonoLisa, Menlo, Monaco, 'Courier New', monospace",
-    "workbench.iconTheme"            = "material-icon-theme",
-    "git.enableSmartCommit"          = true,
-    "git.autofetch"                  = true,
-    "git.confirmSync"                = false,
-  }
+module "coder_vault" {
+  source   = "../_common/vault"
+
+  vault_role_id = var.vault_role_id
+  vault_secret_id = var.vault_secret_id
+  
+  paths = data.coder_parameter.vault_project.value != "" ? ["dotenv/${data.coder_parameter.vault_project.value}"] : []
 }
 
-module "vscode-web" {
-  source                  = "registry.coder.com/modules/vscode-web/coder"
-  version                 = ">= 1.0.0"
-  order                   = 25
-  agent_id                = coder_agent.main.id
-  accept_license          = true
-  auto_install_extensions = true
-  folder                  = "/home/${local.username}/${data.coder_workspace.main.name}"
-  settings = {
-    "workbench.activityBar.location" = "top",
-    "editor.fontFamily"              = "'MonoLisa Nerd Font', MonoLisa, Menlo, Monaco, 'Courier New', monospace",
-    "workbench.iconTheme"            = "material-icon-theme",
-    "git.enableSmartCommit"          = true,
-    "git.autofetch"                  = true,
-    "git.confirmSync"                = false,
-  }
-}
-
-module "windsurf" {
-  source   = "registry.coder.com/modules/windsurf/coder"
-  version  = ">= 1.0.0"
+module "coder_ai" {
+  source   = "../_common/ai"
   agent_id = coder_agent.main.id
-  folder   = "/workspaces/${data.coder_workspace.main.name}.git"
-  order    = 40
+  path     = "/home/${local.username}/${module.git_clone.folder_name}"
+
+  vault_role_id = var.vault_role_id
+  vault_secret_id = var.vault_secret_id
+
+  claude = {
+    enabled = true
+  }
 }
 
-module "jetbrains_gateway" {
-  source = "registry.coder.com/modules/jetbrains-gateway/coder"
-
-  jetbrains_ides = ["IU", "PS", "WS", "PY", "CL", "GO", "RM", "RD", "RR"]
-  default        = "IU"
-
-  # Default folder to open when starting a JetBrains IDE
-  folder = "/home/${local.username}/${data.coder_workspace.main.name}"
-
-  # This ensures that the latest version of the module gets downloaded, you can also pin the module version to prevent breaking changes in production.
-  version = ">= 1.0.0"
-
-  agent_id   = coder_agent.main.id
-  agent_name = "main"
-  order      = 50
+module "coder_editors" {
+  source   = "../_common/editors"
+  agent_id = coder_agent.main.id
+  path     = "/home/${local.username}/${module.git_clone.folder_name}"
 }
 
 resource "coder_script" "npm" {
@@ -350,14 +271,6 @@ module "coder-login" {
   agent_id = coder_agent.main.id
 }
 
-data "coder_parameter" "ai_prompt" {
-  type        = "string"
-  name        = "AI Prompt"
-  default     = ""
-  description = "Write a prompt for Claude Code"
-  mutable     = true
-}
-
 resource "coder_agent" "main" {
   arch = data.coder_provisioner.me.arch
   os   = "linux"
@@ -366,8 +279,6 @@ resource "coder_agent" "main" {
     GIT_COMMITTER_NAME           = "${data.coder_workspace_owner.me.full_name}"
     GIT_AUTHOR_EMAIL             = "${data.coder_workspace_owner.me.email}"
     GIT_COMMITTER_EMAIL          = "${data.coder_workspace_owner.me.email}"
-    CODER_MCP_APP_STATUS_SLUG    = "claude-code"
-    CODER_MCP_CLAUDE_TASK_PROMPT = data.coder_parameter.ai_prompt.value
     DOTFILES_URI                 = data.coder_parameter.dotfiles_repo.value != "" ? data.coder_parameter.dotfiles_repo.value : null
 
   }, data.vault_generic_secret.dotenv.data, data.vault_generic_secret.claude_code.data)
@@ -409,16 +320,6 @@ resource "coder_agent" "main" {
     interval     = 1
     timeout      = 1
   }
-}
-
-resource "coder_app" "blink" {
-  agent_id     = coder_agent.main.id
-  slug         = "blink"
-  display_name = "Blink Shell"
-  url          = "blinkshell://run?key=12BA15&cmd=code ${data.coder_workspace.main.access_url}/@${data.coder_workspace_owner.me.name}/${data.coder_workspace.main.name}.main/apps/code-server/"
-  icon         = "https://assets.polaris.rest/Logos/blink_alt.svg"
-  external     = true
-  order        = 100
 }
 
 resource "docker_volume" "home_volume" {

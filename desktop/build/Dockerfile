@@ -1,5 +1,4 @@
-ARG IMAGE
-FROM ${IMAGE}
+FROM ubuntu:24.04
 
 # Install base dependencies
 RUN apt-get update \

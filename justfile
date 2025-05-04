@@ -17,7 +17,7 @@ alias up := upgrade
 # @just --choose
 [private]
 default:
-  @just --list --list-prefix '  · '
+  @just --choose
 
 default := '_ALL_'
 
@@ -39,7 +39,7 @@ upgrade template=default: (_run template 'init -upgrade')
 _run template command:
 	#!/bin/sh
 	if [ '{{template}}' = '{{default}}' ]; then
-		for folder in `find . -maxdepth 1 -mindepth 1 -type d -not -name '.*' -printf '%f '`; do just _run-one $folder '{{command}}'; done
+		for folder in `find . -maxdepth 2 -mindepth 1 -type d -not -name '.*' -not -path './.*/*' -not -name 'build' -not -name '_common'`; do just _run-one $folder '{{command}}'; done
 	else
 		just _run-one '{{template}}' '{{command}}'
 	fi

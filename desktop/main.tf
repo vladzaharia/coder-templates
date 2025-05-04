@@ -172,18 +172,18 @@ module "coder-login" {
   agent_id = coder_agent.main.id
 }
 
-module "kasmvnc" {
-  source              = "registry.coder.com/modules/kasmvnc/coder"
-  version             = ">= 1.0.0"
-  agent_id            = coder_agent.main.id
-  desktop_environment = "xfce"
-}
-
-module "filebrowser" {
-  source   = "registry.coder.com/modules/filebrowser/coder"
-  version  = ">= 1.0.0"
+module "coder_utilities" {
+  source   = "../_common/utilities"
   agent_id = coder_agent.main.id
-  folder   = "/home/${local.username}"
+  kasm = {
+    enabled = true
+    de = "xfce"
+  }
+
+  file = {
+    enabled = true
+    path = "/home/${local.username}"
+  }
 }
 
 resource "coder_agent" "main" {
