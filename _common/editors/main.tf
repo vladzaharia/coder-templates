@@ -52,8 +52,8 @@ module "jetbrains_gateway" {
   version        = ">= 1.0.0"
   count          = var.jetbrains.enabled ? 1 : 0
   agent_id       = var.agent_id
-  jetbrains_ides = var.jetbrains.products || ["IU", "PS", "WS", "PY", "CL", "GO", "RM", "RD", "RR"]
-  default        = var.jetbrains.default || "IU"
+  jetbrains_ides = var.jetbrains.products
+  default        = var.jetbrains.default
   folder         = var.path
   order          = 50
 }

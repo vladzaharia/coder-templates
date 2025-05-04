@@ -61,9 +61,9 @@ jobs:
       #       /ci-cd/coder-templates/pr VAULT_SECRET_ID
       - name: Download Terraform packages
         run: just init
-      - name: Validate template
+      - name: Validate templates
         run: just validate
-      - name: Plan template
+      - name: Plan templates
         run: just plan
         env:
             # TF_VAR_vault_role_id: ${{ env.VAULT_ROLE_ID }}

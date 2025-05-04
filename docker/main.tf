@@ -226,14 +226,12 @@ module "coder_vault" {
 
   vault_role_id = var.vault_role_id
   vault_secret_id = var.vault_secret_id
-  
-  paths = data.coder_parameter.vault_project.value != "" ? ["dotenv/${data.coder_parameter.vault_project.value}"] : []
 }
 
 module "coder_ai" {
   source   = "../_common/ai"
   agent_id = coder_agent.main.id
-  path     = "/home/${local.username}/${module.git_clone.folder_name}"
+  path     = "/home/${local.username}/${data.coder_workspace.main.name}"
 
   vault_role_id = var.vault_role_id
   vault_secret_id = var.vault_secret_id
@@ -246,7 +244,7 @@ module "coder_ai" {
 module "coder_editors" {
   source   = "../_common/editors"
   agent_id = coder_agent.main.id
-  path     = "/home/${local.username}/${module.git_clone.folder_name}"
+  path     = "/home/${local.username}/${data.coder_workspace.main.name}"
 }
 
 resource "coder_script" "npm" {
@@ -280,8 +278,7 @@ resource "coder_agent" "main" {
     GIT_AUTHOR_EMAIL             = "${data.coder_workspace_owner.me.email}"
     GIT_COMMITTER_EMAIL          = "${data.coder_workspace_owner.me.email}"
     DOTFILES_URI                 = data.coder_parameter.dotfiles_repo.value != "" ? data.coder_parameter.dotfiles_repo.value : null
-
-  }, data.vault_generic_secret.dotenv.data, data.vault_generic_secret.claude_code.data)
+  }, module.coder_ai.data, module.coder_vault.data)
 
   startup_script = <<-EOT
     set -e

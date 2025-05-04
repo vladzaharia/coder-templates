@@ -92,7 +92,7 @@ jobs:
           access_url: 'https://code.polaris.rest'
           # coder_session_token: ${{ env.CODER_SESSION_TOKEN }}
           coder_session_token: ${{ secrets.CODER_SESSION_TOKEN }}
-      - name: Push template
+      - name: Push templates
         run: just deploy
         env:
             CODER_URL: https://code.polaris.rest

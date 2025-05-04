@@ -76,6 +76,11 @@ variable "jetbrains" {
   }
 
   validation {
+    condition     = !var.jetbrains.enabled || (length(var.jetbrains.products) > 0)
+    error_message = "If Jetbrains Gateway is enabled, the list must not be empty."
+  }
+
+  validation {
     condition     = !var.jetbrains.enabled || (length(var.jetbrains.products) == length(toset(var.jetbrains.products)))
     error_message = "If Jetbrains Gateway is enabled, the list must not contain duplicates."
   }
@@ -86,8 +91,8 @@ variable "jetbrains" {
   }
 
   validation {
-    condition = !var.jetbrains.enabled || (contains(["IU", "PS", "WS", "PY", "CL", "GO", "RM", "RD", "RR"], var.jetbrains.default))
-    error_message = "If Jetbrains Gateway is enabled, the default product must be a valid product code. Valid product codes are ${join(",", ["IU", "PS", "WS", "PY", "CL", "GO", "RM", "RD", "RR"])}."
+    condition = !var.jetbrains.enabled || (contains([var.jetbrains.products], var.jetbrains.default))
+    error_message = "If Jetbrains Gateway is enabled, the default product must be a valid product code defined in `products`."
   }  
 }
 
@@ -102,7 +107,7 @@ variable "cursor" {
   }
 }
 
-# Cursor
+# Windsurf
 variable "windsurf" {
   description = "Windsurf (Desktop)"
   type = object({

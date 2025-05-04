@@ -26,5 +26,5 @@ module "windows_rdp" {
   version     = ">= 1.0.0"
   count       = var.rdp.enabled ? 1 : 0
   agent_id    = var.agent_id
-  resource_id = var.resource_id
+  resource_id = var.rdp.resource_id
 }

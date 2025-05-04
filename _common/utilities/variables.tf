@@ -18,7 +18,7 @@ variable "kasm" {
   }
 
   validation {
-    condition = !var.kasm.enabled || (var.kasm.enabled && var.kasm.default != "")
+    condition = !var.kasm.enabled || (var.kasm.enabled && var.kasm.de != "")
     error_message = "If Kasm VNC is enabled, a Desktop Environment is needed."
   }
 }
