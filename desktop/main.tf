@@ -106,6 +106,35 @@ data "coder_parameter" "size" {
   }
 }
 
+data "coder_parameter" "de" {
+  order        = 10
+  name         = "de"
+  display_name = "Desktop environment"
+  description  = "Which desktop environment to use"
+  default      = "xfce"
+  icon         = "/icon/desktop.svg"
+  type         = "string"
+  mutable      = false
+
+  option {
+    name  = "XFCE"
+    value = "xfce"
+    icon  = "https://assets.polaris.rest/Logos/xfce-blanked.svg"
+  }
+
+  option {
+    name  = "Gnome"
+    value = "gnome"
+    icon  = "https://assets.polaris.rest/Logos/gnome.svg"
+  }
+
+  option {
+    name  = "KDE"
+    value = "kde"
+    icon  = "https://assets.polaris.rest/Logos/kde.svg"
+  }
+}
+
 data "coder_parameter" "dotfiles_repo" {
   order        = 150
   name         = "dotfiles_repo"
@@ -247,9 +276,8 @@ resource "docker_image" "main" {
   build {
     context = "./build"
     build_args = {
-      IMAGE       = "codercom/enterprise-desktop"
-      USER        = local.username
-      ENABLE_DIND = "true"
+      USER = local.username
+      DE   = data.coder_parameter.de.value
     }
   }
   triggers = {

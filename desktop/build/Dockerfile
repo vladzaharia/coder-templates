@@ -1,6 +1,24 @@
 ARG IMAGE
 FROM ${IMAGE}
 
+# Install base dependencies
+RUN apt-get update \
+	&& apt-get install -y \
+	curl \
+	direnv \
+	fzf \
+	git \
+	gpg \
+	golang \
+	jq \
+	lsb-release \
+	make \
+	screen \
+	sudo \
+	vim \
+	wget \
+	zsh
+
 # Install Starship
 RUN curl -O https://starship.rs/install.sh && chmod +x install.sh && ./install.sh -y && rm -rf install.sh
 
