@@ -39,6 +39,6 @@ data "vault_generic_secret" "secrets" {
 }
 
 data "vault_generic_secret" "dotenv" {
-  count = data.coder_parameter.vault_project == "" ? 1 : 0
-  path     = "dotenv/${data.coder_parameter.vault_project}/dev"
+  count = data.coder_parameter.vault_project != "" ? 1 : 0
+  path  = "dotenv/${data.coder_parameter.vault_project}/dev"
 }

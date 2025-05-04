@@ -33,5 +33,5 @@ variable "vault_secret_id" {
 variable "paths" {
   type        = list(string)
   description = "Paths of secrets to get from Vault"
-  default = []
+  default     = []
 }

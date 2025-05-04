@@ -222,9 +222,9 @@ module "dotfiles" {
 }
 
 module "coder_vault" {
-  source   = "../_common/vault"
+  source = "../_common/vault"
 
-  vault_role_id = var.vault_role_id
+  vault_role_id   = var.vault_role_id
   vault_secret_id = var.vault_secret_id
 }
 
@@ -233,7 +233,7 @@ module "coder_ai" {
   agent_id = coder_agent.main.id
   path     = "/home/${local.username}/${data.coder_workspace.main.name}"
 
-  vault_role_id = var.vault_role_id
+  vault_role_id   = var.vault_role_id
   vault_secret_id = var.vault_secret_id
 
   claude = {
@@ -273,11 +273,11 @@ resource "coder_agent" "main" {
   arch = data.coder_provisioner.me.arch
   os   = "linux"
   env = merge({
-    GIT_AUTHOR_NAME              = "${data.coder_workspace_owner.me.full_name}"
-    GIT_COMMITTER_NAME           = "${data.coder_workspace_owner.me.full_name}"
-    GIT_AUTHOR_EMAIL             = "${data.coder_workspace_owner.me.email}"
-    GIT_COMMITTER_EMAIL          = "${data.coder_workspace_owner.me.email}"
-    DOTFILES_URI                 = data.coder_parameter.dotfiles_repo.value != "" ? data.coder_parameter.dotfiles_repo.value : null
+    GIT_AUTHOR_NAME     = "${data.coder_workspace_owner.me.full_name}"
+    GIT_COMMITTER_NAME  = "${data.coder_workspace_owner.me.full_name}"
+    GIT_AUTHOR_EMAIL    = "${data.coder_workspace_owner.me.email}"
+    GIT_COMMITTER_EMAIL = "${data.coder_workspace_owner.me.email}"
+    DOTFILES_URI        = data.coder_parameter.dotfiles_repo.value != "" ? data.coder_parameter.dotfiles_repo.value : null
   }, module.coder_ai.data, module.coder_vault.data)
 
   startup_script = <<-EOT

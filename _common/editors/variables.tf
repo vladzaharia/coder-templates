@@ -62,7 +62,7 @@ variable "jetbrains" {
   }
 
   validation {
-    condition = !var.jetbrains.enabled || (var.jetbrains.enabled && var.jetbrains.products != [])
+    condition     = !var.jetbrains.enabled || (var.jetbrains.enabled && var.jetbrains.products != [])
     error_message = "If Jetbrains Gateway is enabled, a list of Jetbrains products is needed."
   }
 
@@ -86,14 +86,14 @@ variable "jetbrains" {
   }
 
   validation {
-    condition = !var.jetbrains.enabled || (var.jetbrains.enabled && var.jetbrains.default != "")
+    condition     = !var.jetbrains.enabled || (var.jetbrains.enabled && var.jetbrains.default != "")
     error_message = "If Jetbrains Gateway is enabled, a default product is needed."
   }
 
   validation {
-    condition = !var.jetbrains.enabled || (contains([var.jetbrains.products], var.jetbrains.default))
+    condition     = !var.jetbrains.enabled || (contains(var.jetbrains.products, var.jetbrains.default))
     error_message = "If Jetbrains Gateway is enabled, the default product must be a valid product code defined in `products`."
-  }  
+  }
 }
 
 # Cursor

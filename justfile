@@ -30,7 +30,7 @@ validate template=default: (init template) && (_run template 'validate')
 plan template=default: (init template) && (_run template 'plan')
 
 # Format Terraform template(s)
-format template=default: (init template) && (_run template 'fmt')
+format template=default: (_run template 'fmt')
 
 # Upgrade Terraform template(s)
 upgrade template=default: (_run template 'init -upgrade')

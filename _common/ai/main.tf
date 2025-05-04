@@ -62,7 +62,7 @@ module "goose" {
   experiment_goose_provider = module.goose-vault.data["GOOSE_PROVIDER"]
   experiment_goose_model    = module.goose-vault.data["GOOSE_MODEL"]
 
-  depends_on = [ module.goose-vault ]
+  depends_on = [module.goose-vault]
 }
 
 module "goose-vault" {

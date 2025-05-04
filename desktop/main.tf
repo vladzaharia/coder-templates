@@ -177,12 +177,12 @@ module "coder_utilities" {
   agent_id = coder_agent.main.id
   kasm = {
     enabled = true
-    de = "xfce"
+    de      = "xfce"
   }
 
   file = {
     enabled = true
-    path = "/home/${local.username}"
+    path    = "/home/${local.username}"
   }
 }
 

@@ -46,11 +46,11 @@ variable "vault_secret_id" {
 variable "multiplexer" {
   description = "Screen or Tmux?"
 
-  type = string
+  type    = string
   default = "screen"
 
   validation {
-    condition = contains(["screen", "tmux"], var.multiplexer)
+    condition     = contains(["screen", "tmux"], var.multiplexer)
     error_message = "Multiplexer must be `screen` or `tmux`."
   }
 }

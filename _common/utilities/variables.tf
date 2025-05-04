@@ -10,15 +10,15 @@ variable "kasm" {
 
   type = object({
     enabled = bool
-    de = string
+    de      = string
   })
   default = {
     enabled = false
-    de = ""
+    de      = ""
   }
 
   validation {
-    condition = !var.kasm.enabled || (var.kasm.enabled && var.kasm.de != "")
+    condition     = !var.kasm.enabled || (var.kasm.enabled && var.kasm.de != "")
     error_message = "If Kasm VNC is enabled, a Desktop Environment is needed."
   }
 }
@@ -26,18 +26,18 @@ variable "kasm" {
 # File Browser
 variable "file" {
   description = "File Browser"
-  
+
   type = object({
     enabled = bool
-    path = string
+    path    = string
   })
   default = {
     enabled = false
-    path = "~"
+    path    = "~"
   }
 
   validation {
-    condition = !var.file.enabled || (var.file.enabled && var.file.path != "")
+    condition     = !var.file.enabled || (var.file.enabled && var.file.path != "")
     error_message = "If File Browser is enabled, a path is needed."
   }
 }
@@ -45,7 +45,7 @@ variable "file" {
 # Jupyter
 variable "jupyter" {
   description = "Jupyter"
-  
+
   type = object({
     enabled = bool
   })
@@ -57,18 +57,18 @@ variable "jupyter" {
 # RDP Server/Client
 variable "rdp" {
   description = "RDP"
-  
+
   type = object({
-    enabled = bool
+    enabled     = bool
     resource_id = string
   })
   default = {
-    enabled = false
+    enabled     = false
     resource_id = ""
   }
 
   validation {
-    condition = !var.rdp.enabled || (var.rdp.enabled && var.rdp.resource_id != "")
+    condition     = !var.rdp.enabled || (var.rdp.enabled && var.rdp.resource_id != "")
     error_message = "If RDP is enabled, a resource ID is needed."
   }
 }
