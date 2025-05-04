@@ -12,7 +12,7 @@ jobs:
     permissions:
       pull-requests: read
     outputs:
-      all_changed_files: ${{ steps.changed-files.outputs.changed_files }}
+      changed_files: ${{ steps.changed-files.outputs.changed_files }}
       any_changed: ${{ steps.changed-files.outputs.any_changed }}
     steps:
       - name: Get changed files (for PR)
@@ -30,7 +30,7 @@ jobs:
         id: changed-files
         run: |
           if [[ "${{github.event_name}}" == "pull_request" ]]; then
-            echo "changed_files=${{ steps.changed-files-pr.outputs.all_changed_files }}" >> $GITHUB_OUTPUT
+            echo "changed_files=${{ steps.changed-files-pr.outputs.changed_files }}" >> $GITHUB_OUTPUT
             echo "any_changed=${{ steps.changed-files-pr.outputs.any_changed }}" >> $GITHUB_OUTPUT
           fi
   
@@ -81,7 +81,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        template: ${{ fromJson(needs.get_params.outputs.all_changed_files) }}
+        template: ${{ fromJson(needs.get_params.outputs.changed_files) }}
     steps:
       - name: Checkout files
         uses: actions/checkout@v3
