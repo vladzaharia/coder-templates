@@ -221,7 +221,7 @@ resource "docker_image" "main" {
   name  = "coder-${data.coder_workspace.main.id}"
   count = var.build ? 1 : 0
   build {
-    context = "../_common/docker/build"
+    context = "../_modules/docker/build"
     build_args = {
       IMAGE       = local.image
       USER        = data.coder_workspace_owner.me.name
@@ -229,7 +229,7 @@ resource "docker_image" "main" {
     }
   }
   triggers = {
-    dir_sha1 = sha1(join("", [for f in fileset(path.module, "../_common/docker/build/*") : filesha1(f)]))
+    dir_sha1 = sha1(join("", [for f in fileset(path.module, "../_modules/docker/build/*") : filesha1(f)]))
   }
 }
 

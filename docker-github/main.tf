@@ -32,13 +32,13 @@ data "coder_workspace_owner" "me" {}
 
 
 module "coder_coder" {
-  source = "../_common/coder"
+  source = "../_modules/coder"
 
   env = merge({ GITHUB_ACCESS_TOKEN: module.coder_git.github_access_token, DOTFILES_URI: module.coder_dotfiles.dotfiles_uri }, module.coder_ai.data, module.coder_vault.data)
 }
 
 module "coder_git" {
-  source = "../_common/git"
+  source = "../_modules/git"
 
   agent_id = module.coder_coder.agent_id
   github = {
@@ -47,34 +47,34 @@ module "coder_git" {
 }
 
 module "coder_docker" {
-  source = "../_common/docker"
+  source = "../_modules/docker"
 
   init_script = module.coder_coder.init_script
   coder_token = module.coder_coder.token
 }
 
 module "coder_dotfiles" {
-  source = "../_common/dotfiles"
+  source = "../_modules/dotfiles"
 
   agent_id = module.coder_coder.agent_id
 }
 
 module "coder_vault" {
-  source = "../_common/vault"
+  source = "../_modules/vault"
 
   vault_role_id   = var.vault_role_id
   vault_secret_id = var.vault_secret_id
 }
 
 module "coder_editors" {
-  source   = "../_common/editors"
+  source   = "../_modules/editors"
   agent_id = module.coder_coder.agent_id
 
   path     = "/home/${data.coder_workspace_owner.me.name}/${module.coder_git.folder_name}"
 }
 
 module "coder_ai" {
-  source = "../_common/ai"
+  source = "../_modules/ai"
 
   agent_id = module.coder_coder.agent_id
   path     = "/home/${data.coder_workspace_owner.me.name}/${module.coder_git.folder_name}"
