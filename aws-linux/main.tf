@@ -218,7 +218,7 @@ resource "coder_agent" "dev" {
   arch           = "amd64"
   auth           = "aws-instance-identity"
   os             = "linux"
-  startup_script = <<-EOT
+  init_script = <<-EOT
     set -e
 
     # install and start code-server

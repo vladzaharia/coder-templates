@@ -197,7 +197,7 @@ resource "coder_agent" "main" {
     DOTFILES_URI        = data.coder_parameter.dotfiles_repo.value != "" ? data.coder_parameter.dotfiles_repo.value : null
   }
 
-  startup_script = <<-EOT
+  init_script = <<-EOT
     set -e
 
     # Prepare user home with default files on first start.

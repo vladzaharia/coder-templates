@@ -9,18 +9,15 @@ alias u := upgrade
 alias up := upgrade
 
 # Default template value
-
 DEFAULT := '__DEFAULT__'
 
 # Log levels
-
 INFO := '__INFO__'
 WARN := '__WARN__'
 ERR := '__ERR__'
 SUCCESS := '__SUCCESS__'
 
 # Terminal colors and reset
-
 GREY := '\033[1;90m'
 
 [private]
@@ -71,7 +68,7 @@ _run template command:
     #!/bin/sh
     if [ '{{ template }}' = '{{ DEFAULT }}' ]; then
     	just _log '{{ INFO }}' 'Running {{ GREY }}{{ command }}{{ NORMAL }} on all templates and modules...'
-    	for folder in `find . -maxdepth 2 -mindepth 1 -type d -not -name '.*' -not -path './.*/*' -not -name 'build' -not -name '_common' -not -path './_common/*'`; do just _run-one $folder '{{ command }}'; done
+    	for folder in `find . -maxdepth 2 -mindepth 1 -type d -not -name '.*' -not -path './.*/*' -not -name 'build' -not -name '_common'`; do just _run-one $folder '{{ command }}'; done
     else
     	just _run-one '{{ template }}' '{{ command }}'
     fi
@@ -82,7 +79,7 @@ _run_nc template command:
     #!/bin/sh
     if [ '{{ template }}' = '{{ DEFAULT }}' ]; then
     	just _log '{{ INFO }}' 'Running {{ GREY }}{{ command }}{{ NORMAL }} on all templates...'
-    	for folder in `find . -maxdepth 2 -mindepth 1 -type d -not -name '.*' -not -path './.*/*' -not -name 'build' -not -name '_common'`; do just _run-one $folder '{{ command }}'; done
+    	for folder in `find . -maxdepth 2 -mindepth 1 -type d -not -name '.*' -not -path './.*/*' -not -name 'build' -not -name '_common' -not -path './_common/*'`; do just _run-one $folder '{{ command }}'; done
     else
     	just _run-one '{{ template }}' '{{ command }}'
     fi
