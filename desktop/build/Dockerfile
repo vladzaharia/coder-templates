@@ -1,5 +1,4 @@
-ARG IMAGE
-FROM ${IMAGE}
+FROM ubuntu:24.04
 
 # Install base dependencies
 RUN apt-get update \
@@ -55,4 +54,10 @@ USER ${USER}
 WORKDIR /home/${USER}
 
 # pre-install VS Code extensions
-RUN code-server --install-extension eamodio.gitlens 
+RUN code-server --install-extension eamodio.gitlens
+RUN code-server --install-extension ms-azuretools.vscode-containers
+RUN code-server --install-extension github.vscode-github-actions
+RUN code-server --install-extension BeardedBear.beardedtheme
+RUN code-server --install-extension EditorConfig.EditorConfig
+RUN code-server --install-extension skellock.just
+RUN code-server --install-extension esbenp.prettier-vscode

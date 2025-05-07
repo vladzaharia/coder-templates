@@ -215,10 +215,10 @@ data "aws_ami" "ubuntu" {
 }
 
 resource "coder_agent" "dev" {
-  arch           = "amd64"
-  auth           = "aws-instance-identity"
-  os             = "linux"
-  startup_script = <<-EOT
+  arch        = "amd64"
+  auth        = "aws-instance-identity"
+  os          = "linux"
+  init_script = <<-EOT
     set -e
 
     # install and start code-server

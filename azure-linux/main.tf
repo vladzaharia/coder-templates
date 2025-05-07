@@ -238,7 +238,7 @@ resource "coder_agent" "main" {
   os   = "linux"
   auth = "azure-instance-identity"
 
-  startup_script = <<-EOT
+  init_script = <<-EOT
     #!/bin/bash
     set -e
     if [ -n "$DOTFILES_URI" ]; then
