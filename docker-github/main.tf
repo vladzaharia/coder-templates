@@ -34,7 +34,7 @@ data "coder_workspace_owner" "me" {}
 module "coder_coder" {
   source = "../_modules/coder"
 
-  env = merge({ GITHUB_ACCESS_TOKEN: module.coder_git.github_access_token, DOTFILES_URI: module.coder_dotfiles.dotfiles_uri }, module.coder_ai.data, module.coder_vault.data)
+  env = merge({ GITHUB_ACCESS_TOKEN : module.coder_git.github_access_token, DOTFILES_URI : module.coder_dotfiles.dotfiles_uri }, module.coder_ai.data, module.coder_vault.data)
 }
 
 module "coder_git" {
@@ -70,7 +70,7 @@ module "coder_editors" {
   source   = "../_modules/editors"
   agent_id = module.coder_coder.agent_id
 
-  path     = "/home/${data.coder_workspace_owner.me.name}/${module.coder_git.folder_name}"
+  path = "/home/${data.coder_workspace_owner.me.name}/${module.coder_git.folder_name}"
 }
 
 module "coder_ai" {

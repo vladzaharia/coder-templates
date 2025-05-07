@@ -9,7 +9,7 @@ variable "github" {
   type = object({
     enabled = bool
   })
-  default = {   
+  default = {
     enabled = false
   }
 }

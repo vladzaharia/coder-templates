@@ -33,7 +33,7 @@ data "coder_workspace_owner" "me" {}
 module "coder_coder" {
   source = "../_modules/coder"
 
-  env = merge({ DOTFILES_URI: module.coder_dotfiles.dotfiles_uri }, module.coder_ai.data, module.coder_vault.data)
+  env = merge({ DOTFILES_URI : module.coder_dotfiles.dotfiles_uri }, module.coder_ai.data, module.coder_vault.data)
 }
 
 module "coder_git" {
