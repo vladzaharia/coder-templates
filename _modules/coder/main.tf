@@ -34,7 +34,7 @@ resource "coder_agent" "main" {
       touch ~/.init_done
     fi
 
-    ${var.init_script}
+    ${var.init_script_extra}
   EOT
 
   metadata {

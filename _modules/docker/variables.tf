@@ -29,7 +29,7 @@ variable "build" {
   default     = true
 }
 
-variable "init_script" {
+variable "init_script_extra" {
   description = "Init script to run in the workspace after the generic Coder one."
   type        = string
   default     = ""
