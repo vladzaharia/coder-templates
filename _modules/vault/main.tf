@@ -33,12 +33,12 @@ data "coder_parameter" "vault_project" {
   mutable      = false
 }
 
-data "vault_generic_secret" "secrets" {
-  for_each = toset(var.paths)
-  path     = "dotenv/${each.key}/dev"
+data "vault_generic_secret" "path" {
+  count = var.path != null ? 1 : 0
+  path  = "dotenv/${var.path}/dev"
 }
 
 data "vault_generic_secret" "dotenv" {
-  count = data.coder_parameter.vault_project != "" ? 1 : 0
-  path  = "dotenv/${data.coder_parameter.vault_project}/dev"
+  count = data.coder_parameter.vault_project.value != "" ? 1 : 0
+  path  = "dotenv/${data.coder_parameter.vault_project.value}/dev"
 }

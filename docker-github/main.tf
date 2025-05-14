@@ -3,8 +3,13 @@ terraform {
     coder = {
       source = "coder/coder"
     }
+    docker = {
+      source = "kreuzwerker/docker"
+    }
   }
 }
+
+provider "docker" {}
 
 variable "vault_role_id" {
   type        = string

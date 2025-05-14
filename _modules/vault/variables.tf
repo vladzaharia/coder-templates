@@ -30,8 +30,9 @@ variable "vault_secret_id" {
   }
 }
 
-variable "paths" {
-  type        = list(string)
-  description = "Paths of secrets to get from Vault"
-  default     = []
+variable "path" {
+  type        = string
+  description = "Path of secrets to get from Vault"
+  nullable = true
+  default = null
 }

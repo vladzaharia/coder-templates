@@ -36,7 +36,7 @@ module "git_commit_signing" {
 }
 
 module "git_clone" {
-  count    = var.github.enabled && (var.repo != null || data.coder_parameter.github_repo[0].value != "") ? 1 : 0
+  count    = var.github.enabled ? 1 : 0
   source   = "registry.coder.com/modules/git-clone/coder"
   version  = ">= 1.0.0"
   agent_id = var.agent_id
