@@ -193,7 +193,7 @@ module "git-commit-signing" {
 }
 
 module "coder_editors" {
-  source   = "../_modules/editors"
+  source   = "./_modules/editors"
   agent_id = coder_agent.main.id
   path     = "/workspaces/${data.coder_workspace.main.name}.git"
 }

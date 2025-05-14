@@ -49,7 +49,7 @@ terraform command template=DEFAULT *FLAGS='':
     fi
 
 # Deploy Coder template(s)
-deploy template=DEFAULT: (plan template)
+deploy template=DEFAULT: (plan template) (ln-modules template)
     #!/bin/sh
     if [ '{{ template }}' = '{{ DEFAULT }}' ]; then
     	just _log '{{ INFO }}' 'Deploying all templates...'
@@ -62,6 +62,27 @@ deploy template=DEFAULT: (plan template)
     	coder templates push "{{ template }}" --directory "./{{ template }}" --yes --name="$CODER_TEMPLATE_VERSION" --message="$CODER_TEMPLATE_MESSAGE" --variable vault_role_id="$VAULT_ROLE_ID" --variable vault_secret_id="$VAULT_SECRET_ID"
     fi
     just _log '{{ SUCCESS }}' "Successfully deployed template(s)!"
+
+ln-modules template=DEFAULT: 
+    #!/bin/sh
+    if [ '{{ template }}' = '{{ DEFAULT }}' ]; then
+    	just _log '{{ INFO }}' 'Setting up all templates...'
+    	for folder in `find . -maxdepth 2 -mindepth 1 -type d -not -name '.*' -not -path './_modules/*' -not -path './.*/*' -not -name 'build' -not -name '_modules' -printf '%f '`; do 
+    		just _log '{{ INFO }}' "Setting up template {{ GREY }}$folder{{ NORMAL }}..."
+            cd "./$folder"
+            rm -rf ./_modules
+            ln -s -T ../_modules ./_modules
+            cd ../
+    	done
+    else
+    	just _log '{{ INFO }}' 'Setting up template {{ GREY }}{{ template }}{{ NORMAL }}...'
+        cd {{ template }}
+        rm -rf ./_modules
+        ln -s -T ../_modules ./_modules
+        cd ../
+    fi
+    just _log '{{ SUCCESS }}' "Successfully set up template(s)!"
+
 
 # Run a command across Terraform templates and common modules
 _run template command:

@@ -173,7 +173,7 @@ module "coder-login" {
 }
 
 module "coder_utilities" {
-  source   = "../_modules/utilities"
+  source   = "./_modules/utilities"
   agent_id = coder_agent.main.id
   kasm = {
     enabled = true
