@@ -25,7 +25,7 @@ default:
     @just --choose
 
 # Initialize Terraform template(s) and download packages
-init template=DEFAULT: (_run template 'init')
+init template=DEFAULT: (ln-modules template) (_run template 'init')
 
 # Validate Terraform template(s) and common modules
 validate template=DEFAULT: (init template) && (_run template 'validate')
