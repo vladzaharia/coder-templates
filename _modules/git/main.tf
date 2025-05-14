@@ -11,6 +11,16 @@ data "coder_external_auth" "github" {
   count = var.github.enabled ? 1 : 0
 }
 
+data "coder_parameter" "github_repo" {
+  count = var.github.enabled ? 1 : 0
+  order        = 100
+  name         = "github_repo"
+  display_name = "GitHub repo"
+  description  = "GitHub repository to clone, as owner/repository"
+  icon         = "/icon/github.svg"
+  mutable      = false
+}
+
 module "git_config" {
   source                = "registry.coder.com/modules/git-config/coder"
   version               = ">= 1.0.0"
@@ -31,14 +41,4 @@ module "git_clone" {
   version  = ">= 1.0.0"
   agent_id = var.agent_id
   url      = "https://github.com/${var.repo != null ? var.repo : data.coder_parameter.github_repo[0].value}"
-}
-
-data "coder_parameter" "github_repo" {
-  count        = var.repo == null && var.github.enabled ? 1 : 0
-  order        = 100
-  name         = "github_repo"
-  display_name = "GitHub repo"
-  description  = "GitHub repository to clone, as owner/repository"
-  icon         = "/icon/github.svg"
-  mutable      = false
 }
