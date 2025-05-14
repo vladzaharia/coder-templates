@@ -214,7 +214,7 @@ module "dotfiles" {
 resource "coder_agent" "main" {
   arch        = data.coder_provisioner.me.arch
   os          = "linux"
-  init_script = <<-EOT
+  startup_script = <<-EOT
     set -e
 
     # Prepare user home with default files on first start.

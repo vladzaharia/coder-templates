@@ -4,7 +4,7 @@ variable "env" {
   default     = {}
 }
 
-variable "init_script_extra" {
+variable "init_script" {
   description = "Startup script to run in the workspace after the generic Coder one."
   type        = string
   default     = ""

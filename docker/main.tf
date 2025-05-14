@@ -45,7 +45,7 @@ module "coder_git" {
 module "coder_docker" {
   source = "../_modules/docker"
 
-  init_script_extra = module.coder_coder.init_script
+  init_script = module.coder_coder.init_script
   coder_token = module.coder_coder.token
 }
 

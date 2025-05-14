@@ -25,7 +25,7 @@ resource "coder_agent" "main" {
     GIT_COMMITTER_EMAIL = "${data.coder_workspace_owner.me.email}"
   }, var.env)
 
-  init_script = <<-EOT
+  startup_script = <<-EOT
     set -e
 
     # Prepare user home with default files on first start.
@@ -34,7 +34,7 @@ resource "coder_agent" "main" {
       touch ~/.init_done
     fi
 
-    ${var.init_script_extra}
+    ${var.init_script}
   EOT
 
   metadata {
