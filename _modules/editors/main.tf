@@ -50,12 +50,24 @@ module "vscode-web" {
 module "jetbrains_gateway" {
   source         = "registry.coder.com/modules/jetbrains-gateway/coder"
   version        = ">= 1.0.0"
-  count          = var.jetbrains.enabled ? 1 : 0
+  count          = var.jetbrains.enabled && var.jetbrains.default != "FL" ? 1 : 0
   agent_id       = var.agent_id
   jetbrains_ides = var.jetbrains.products
   default        = var.jetbrains.default
+  latest         = true
   folder         = var.path
   order          = 50
+}
+
+resource "coder_app" "fleet" {
+  agent_id     = var.agent_id
+  count        = var.jetbrains.enabled && contains(var.jetbrains.products, "FL") ? 1 : 0
+  slug         = "fleet"
+  display_name = "Jetbrains Fleet"
+  url          = "fleet://fleet.ssh/coder.${data.coder_workspace.main.name}?pwd=${var.path}"
+  icon         = "/icon/fleet.svg"
+  external     = true
+  order        = 55
 }
 
 module "cursor" {

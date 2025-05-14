@@ -57,8 +57,8 @@ variable "jetbrains" {
   })
   default = {
     enabled  = true
-    products = ["IU", "PS", "WS", "PY", "CL", "GO", "RM", "RD", "RR"]
-    default  = "IU"
+    products = ["IU", "PS", "WS", "PY", "CL", "GO", "RM", "RD", "RR", "FL"]
+    default  = "FL"
   }
 
   validation {
@@ -69,10 +69,10 @@ variable "jetbrains" {
   validation {
     condition = !var.jetbrains.enabled || (
       alltrue([
-        for code in var.jetbrains.products : contains(["IU", "PS", "WS", "PY", "CL", "GO", "RM", "RD", "RR"], code)
+        for code in var.jetbrains.products : contains(["IU", "PS", "WS", "PY", "CL", "GO", "RM", "RD", "RR", "FL"], code)
       ])
     )
-    error_message = "If Jetbrains Gateway is enabled, the list must contain valid product codes. Valid product codes are ${join(",", ["IU", "PS", "WS", "PY", "CL", "GO", "RM", "RD", "RR"])}."
+    error_message = "If Jetbrains Gateway is enabled, the list must contain valid product codes. Valid product codes are ${join(",", ["IU", "PS", "WS", "PY", "CL", "GO", "RM", "RD", "RR", "FL"])}."
   }
 
   validation {
