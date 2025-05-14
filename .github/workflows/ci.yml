@@ -67,7 +67,7 @@ jobs:
     needs: get_params
     name: Deploy all templates
     runs-on: ubuntu-latest
-    if: ${{ contains(needs.get_params.outputs.changed_files, '_common') }}
+    if: ${{ contains(needs.get_params.outputs.changed_files, '_modules') }}
     permissions:
       id-token: write
     steps:
@@ -85,7 +85,8 @@ jobs:
       #       /ci-cd/coder-templates/ci VAULT_ROLE_ID ;
       #       /ci-cd/coder-templates/ci VAULT_SECRET_ID ;
       #       /ci-cd/coder-templates/ci CODER_SESSION_TOKEN
-  
+      - name: Use Just
+        uses: extractions/setup-just@v2
       - name: Setup Coder
         uses: coder/setup-action@v1
         with:
@@ -107,7 +108,7 @@ jobs:
     needs: get_params
     name: Deploy template
     runs-on: ubuntu-latest
-    if: ${{ needs.get_params.outputs.any_changed != 'false' && !(contains(needs.get_params.outputs.changed_files, '_common')) }}
+    if: ${{ needs.get_params.outputs.any_changed != 'false' && !(contains(needs.get_params.outputs.changed_files, '_modules')) }}
     permissions:
       id-token: write
     strategy:
