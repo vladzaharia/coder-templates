@@ -41,7 +41,7 @@ module "claude-vault" {
   vault_role_id   = var.vault_role_id
   vault_secret_id = var.vault_secret_id
 
-  paths = ["dotenv/coder-claude-code/dev"]
+  path = "coder-claude-code"
 }
 
 module "goose" {
@@ -71,5 +71,5 @@ module "goose-vault" {
   vault_role_id   = var.vault_role_id
   vault_secret_id = var.vault_secret_id
 
-  paths = ["dotenv/coder-goose/dev"]
+  path = "coder-goose"
 }

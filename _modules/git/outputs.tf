@@ -1,6 +1,6 @@
 output "folder_name" {
   description = "Folder name"
-  value       = var.repo != null || data.coder_parameter.github_repo[0].value != "" ? data.coder_parameter.github_repo[0].value : null
+  value = var.github.enabled ? module.git_clone[0].folder_name : ""
 }
 
 output "github_access_token" {

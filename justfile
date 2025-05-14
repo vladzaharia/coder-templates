@@ -53,7 +53,7 @@ deploy template=DEFAULT: (plan template)
     #!/bin/sh
     if [ '{{ template }}' = '{{ DEFAULT }}' ]; then
     	just _log '{{ INFO }}' 'Deploying all templates...'
-    	for folder in `find . -maxdepth 2 -mindepth 1 -type d -not -name '.*' -not -path './_common/*' -not -path './.*/*' -not -name 'build' -not -name '_common' -printf '%f '`; do 
+    	for folder in `find . -maxdepth 2 -mindepth 1 -type d -not -name '.*' -not -path './_modules/*' -not -path './.*/*' -not -name 'build' -not -name '_modules' -printf '%f '`; do 
     		just _log '{{ INFO }}' "Deploying template {{ GREY }}$folder{{ NORMAL }}..."
     		coder templates push "$folder" --directory "./$folder" --yes --name="$CODER_TEMPLATE_VERSION" --message="$CODER_TEMPLATE_MESSAGE" --variable vault_role_id="$VAULT_ROLE_ID" --variable vault_secret_id="$VAULT_SECRET_ID"
     	done
@@ -68,7 +68,7 @@ _run template command:
     #!/bin/sh
     if [ '{{ template }}' = '{{ DEFAULT }}' ]; then
     	just _log '{{ INFO }}' 'Running {{ GREY }}{{ command }}{{ NORMAL }} on all templates and modules...'
-    	for folder in `find . -maxdepth 2 -mindepth 1 -type d -not -name '.*' -not -path './.*/*' -not -name 'build' -not -name '_common'`; do just _run-one $folder '{{ command }}'; done
+    	for folder in `find . -maxdepth 2 -mindepth 1 -type d -not -name '.*' -not -path './.*/*' -not -name 'build' -not -name '_modules'`; do just _run-one $folder '{{ command }}'; done
     else
     	just _run-one '{{ template }}' '{{ command }}'
     fi
@@ -79,7 +79,7 @@ _run_nc template command:
     #!/bin/sh
     if [ '{{ template }}' = '{{ DEFAULT }}' ]; then
     	just _log '{{ INFO }}' 'Running {{ GREY }}{{ command }}{{ NORMAL }} on all templates...'
-    	for folder in `find . -maxdepth 2 -mindepth 1 -type d -not -name '.*' -not -path './.*/*' -not -name 'build' -not -name '_common' -not -path './_common/*'`; do just _run-one $folder '{{ command }}'; done
+    	for folder in `find . -maxdepth 2 -mindepth 1 -type d -not -name '.*' -not -path './.*/*' -not -name 'build' -not -name '_modules' -not -path './_modules/*'`; do just _run-one $folder '{{ command }}'; done
     else
     	just _run-one '{{ template }}' '{{ command }}'
     fi
