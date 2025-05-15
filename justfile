@@ -49,7 +49,7 @@ terraform command template=DEFAULT *FLAGS='':
     fi
 
 # Deploy Coder template(s)
-deploy template=DEFAULT: (plan template) (_cp-modules template)
+deploy template=DEFAULT: (_cp-modules template)
     #!/bin/sh
     if [ '{{ template }}' = '{{ DEFAULT }}' ]; then
     	just _log '{{ INFO }}' 'Deploying all templates...'
