@@ -5,17 +5,33 @@ tags: [local, docker, github, dotfiles, vault]
 icon: https://static-00.iconduck.com/assets.00/github-icon-512x497-oppthre2.png
 ---
 
-# docker-github
+# GitHub Workspace
 
-To get started, run `coder templates init`. When prompted, select this template.
-Follow the on-screen instructions to proceed.
+This template creates a Docker-based workspace that automatically clones and sets up a GitHub repository.
 
-## Editing the image
+## Features
 
-Edit the `Dockerfile` and run `coder templates push` to update workspaces.
+- Automatic GitHub repository cloning
+- Docker-based development environment
+- Integrated code-server (VS Code in browser)
+- Dotfiles support for personalization
+- HashiCorp Vault integration for secrets management
+- Git configuration and utilities
 
-## code-server
+## Getting Started
 
-`code-server` is installed via the `init_script` argument in the `coder_agent`
-resource block. The `coder_app` resource is defined to access `code-server` through
-the dashboard UI over `localhost:13337`.
+Run `coder templates init` and select this template to get started.
+
+## Configuration
+
+When creating a workspace, you'll need to provide:
+
+- GitHub repository URL
+- Container size
+- Base image (optional)
+- Dotfiles repository (optional)
+- Vault credentials (if using Vault integration)
+
+## Customization
+
+Edit the `main.tf` file to modify the template configuration or add new features.

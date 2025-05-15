@@ -44,6 +44,7 @@ jobs:
           files_ignore: |
             _deprecated/**
             **/*.md
+            LICENSE
       - name: Get changed files (manual)
         id: changed-files-manual
         if: github.event_name == 'workflow_dispatch'

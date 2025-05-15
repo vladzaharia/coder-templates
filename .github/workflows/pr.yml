@@ -25,6 +25,7 @@ jobs:
           files_ignore: |
             _deprecated/**
             **/*.md
+            LICENSE
       - name: Get changed files
         id: changed-files
         run: |

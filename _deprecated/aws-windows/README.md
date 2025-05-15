@@ -5,70 +5,37 @@ tags: [cloud, aws, windows]
 icon: /icon/aws.png
 ---
 
-# aws-windows
+# AWS Windows VM (Deprecated)
 
-## Getting started
+> ⚠️ **DEPRECATED**: This template is deprecated and may not receive updates. Consider using other templates.
 
-To get started, run `coder templates init`. When prompted, select this template.
-Follow the on-screen instructions to proceed.
+This template creates a Windows Server virtual machine on AWS for development.
+
+## Features
+
+- AWS EC2 instance running Windows Server
+- Automatic provisioning and configuration
+- Remote Desktop Protocol (RDP) access
+- Windows-native development environment
+
+## Getting Started
+
+Run `coder templates init` and select this template to get started.
+
+## Configuration
+
+When creating a workspace, you'll need to provide:
+
+- AWS authentication credentials
+- Instance type
+- Region
+- Windows Server version
+
+## Customization
+
+Edit the `main.tf` file to modify the template configuration or add new features.
 
 ## Authentication
 
-This template assumes that coderd is run in an environment that is authenticated
-with AWS. For example, run `aws configure import` to import credentials on the
-system and user running coderd. For other ways to authenticate [consult the
-Terraform docs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#authentication-and-configuration).
-
-## Required permissions / policy
-
-The following sample policy allows Coder to create EC2 instances and modify
-instances provisioned by Coder:
-
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "VisualEditor0",
-      "Effect": "Allow",
-      "Action": [
-        "ec2:GetDefaultCreditSpecification",
-        "ec2:DescribeIamInstanceProfileAssociations",
-        "ec2:DescribeTags",
-        "ec2:DescribeInstances",
-        "ec2:DescribeInstanceTypes",
-        "ec2:CreateTags",
-        "ec2:RunInstances",
-        "ec2:DescribeInstanceCreditSpecifications",
-        "ec2:DescribeImages",
-        "ec2:ModifyDefaultCreditSpecification",
-        "ec2:DescribeVolumes"
-      ],
-      "Resource": "*"
-    },
-    {
-      "Sid": "CoderResources",
-      "Effect": "Allow",
-      "Action": [
-        "ec2:DescribeInstanceAttribute",
-        "ec2:UnmonitorInstances",
-        "ec2:TerminateInstances",
-        "ec2:StartInstances",
-        "ec2:StopInstances",
-        "ec2:DeleteTags",
-        "ec2:MonitorInstances",
-        "ec2:CreateTags",
-        "ec2:RunInstances",
-        "ec2:ModifyInstanceAttribute",
-        "ec2:ModifyInstanceCreditSpecification"
-      ],
-      "Resource": "arn:aws:ec2:*:*:instance/*",
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/Coder_Provisioned": "true"
-        }
-      }
-    }
-  ]
-}
-```
+This template requires AWS credentials. Run `aws configure import` to import credentials on the
+system running Coder. See the [Terraform AWS Provider docs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#authentication-and-configuration) for more authentication options.

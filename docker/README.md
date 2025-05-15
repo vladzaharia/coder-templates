@@ -5,31 +5,33 @@ tags: [local, docker, dotfiles, vault]
 icon: /icon/docker.png
 ---
 
-# docker
+# Docker Workspace
 
-To get started, run `coder templates init`. When prompted, select this template.
-Follow the on-screen instructions to proceed.
+This template creates a Docker-based workspace using registry images for development.
 
-## Editing the image
+## Features
 
-Edit the `Dockerfile` and run `coder templates push` to update workspaces.
+- Docker-based development environment
+- Integrated code-server (VS Code in browser)
+- Dotfiles support for personalization
+- HashiCorp Vault integration for secrets management
+- Git configuration and utilities
+- AI integration capabilities
 
-## code-server
+## Getting Started
 
-`code-server` is installed via the `init_script` argument in the `coder_agent`
-resource block. The `coder_app` resource is defined to access `code-server` through
-the dashboard UI over `localhost:13337`.
+Run `coder templates init` and select this template to get started.
 
-## Extending this template
+## Configuration
 
-See the [kreuzwerker/docker](https://registry.terraform.io/providers/kreuzwerker/docker) Terraform provider documentation to
-add the following features to your Coder template:
+When creating a workspace, you can configure:
 
-- SSH/TCP docker host
-- Registry authentication
-- Build args
-- Volume mounts
-- Custom container spec
-- More
+- Container size
+- Base image (Ubuntu, Debian, language-specific images)
+- Docker-in-Docker support
+- Dotfiles repository
 
-We also welcome contributions!
+## Customization
+
+Edit the `main.tf` file to modify the template configuration or add new features.
+See the [kreuzwerker/docker](https://registry.terraform.io/providers/kreuzwerker/docker) Terraform provider documentation for additional options.
