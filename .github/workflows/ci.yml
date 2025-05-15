@@ -48,7 +48,7 @@ jobs:
               - justfile
             templates:
               - '!_modules/**'
-              - '!github/**'
+              - '!.github/**'
               - '!justfile'
 
           files_ignore: |

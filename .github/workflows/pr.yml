@@ -26,14 +26,14 @@ jobs:
             common:
               - _modules/**
               - .github/**
+              - '!.github/workflows/ci.yml'
               - justfile
             templates:
               - '!_modules/**'
-              - '!github/**'
+              - '!.github/**'
               - '!justfile'
 
           files_ignore: |
-            .github/workflows/ci.yml
             _deprecated/**
             **/*.md
             LICENSE
