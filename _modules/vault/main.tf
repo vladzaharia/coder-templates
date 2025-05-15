@@ -24,6 +24,7 @@ provider "vault" {
 }
 
 data "coder_parameter" "vault_project" {
+  count = var.path == null ? 1 : 0
   order        = 200
   name         = "vault_project"
   display_name = "Vault project name"
@@ -39,6 +40,6 @@ data "vault_generic_secret" "path" {
 }
 
 data "vault_generic_secret" "dotenv" {
-  count = data.coder_parameter.vault_project.value != "" ? 1 : 0
-  path  = "dotenv/${data.coder_parameter.vault_project.value}/dev"
+  count = data.coder_parameter.vault_project[0].value != "" ? 1 : 0
+  path  = "dotenv/${data.coder_parameter.vault_project[0].value}/dev"
 }
