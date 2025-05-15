@@ -84,9 +84,9 @@ _run template command:
     #!/bin/sh
     if [ '{{ template }}' = '{{ DEFAULT }}' ]; then
     	just _log '{{ INFO }}' 'Running {{ GREY }}{{ command }}{{ NORMAL }} on all templates and modules...'
-    	for folder in `find . -maxdepth 2 -mindepth 1 -type d -not -name '.*' -not -path './.*/*' -not -name 'build' -not -name '_modules'`; do just _run-one $folder '{{ command }}'; done
+    	for folder in `find . -maxdepth 2 -mindepth 1 -type d -not -name '.*' -not -path './.*/*' -not -name 'build' -not -name '_modules'`; do if ! (just _run-one $folder '{{ command }}'); then exit 1; fi; done
     else
-    	just _run-one '{{ template }}' '{{ command }}'
+    	if ! (just _run-one '{{ template }}' '{{ command }}'); then exit 1; fi
     fi
     just _log '{{ SUCCESS }}' 'Succesffully ran {{ GREY }}{{ command }}{{ NORMAL }} on templates and modules!'
 
@@ -95,9 +95,9 @@ _run_nc template command:
     #!/bin/sh
     if [ '{{ template }}' = '{{ DEFAULT }}' ]; then
     	just _log '{{ INFO }}' 'Running {{ GREY }}{{ command }}{{ NORMAL }} on all templates...'
-    	for folder in `find . -maxdepth 2 -mindepth 1 -type d -not -name '.*' -not -path './.*/*' -not -name 'build' -not -name '_modules' -not -path './_modules/*'`; do just _run-one $folder '{{ command }}'; done
+    	for folder in `find . -maxdepth 2 -mindepth 1 -type d -not -name '.*' -not -path './.*/*' -not -name 'build' -not -name '_modules' -not -path './_modules/*'`; do if ! (just _run-one $folder '{{ command }}'); then exit 1; fi; done
     else
-    	just _run-one '{{ template }}' '{{ command }}'
+    	if ! (just _run-one '{{ template }}' '{{ command }}'); then exit 1; fi
     fi
     just _log '{{ SUCCESS }}' 'Succesffully ran {{ GREY }}{{ command }}{{ NORMAL }} on templates!'
 
