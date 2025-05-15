@@ -22,6 +22,16 @@ jobs:
           dir_names: true
           dir_names_max_depth: 1
           json: true
+          files_yaml: |
+            common:
+              - _modules/**
+              - .github/**
+              - justfile
+            templates:
+              - '!_modules/**'
+              - '!github/**'
+              - '!justfile'
+
           files_ignore: |
             _deprecated/**
             **/*.md
@@ -30,57 +40,20 @@ jobs:
         id: changed-files
         run: |
           if [[ "${{github.event_name}}" == "pull_request" ]]; then
-            if [[ "${{ steps.changed-files-pr.outputs.all_changed_files }}" =~ "\.github|\.|_modules" ]]; then
+            if [[ "${{ steps.changed-files-pr.outputs.common_any_changed }}" == "true" ]]; then
               echo $(tree -J -d -L 1 | jq -c '.[0].contents | map(.name) | map(select(startswith("_") | not))' | sed 's/"/\\"/g') >> $GITHUB_OUTPUT
               echo "any_changed=true" >> $GITHUB_OUTPUT
             else
-              echo "changed_files=${{ steps.changed-files-pr.outputs.all_changed_files }}" >> $GITHUB_OUTPUT
-              echo "any_changed=${{ steps.changed-files-pr.outputs.any_changed }}" >> $GITHUB_OUTPUT
+              echo "changed_files=${{ steps.changed-files-pr.outputs.templates_all_changed_files }}" >> $GITHUB_OUTPUT
+              echo "any_changed=${{ steps.changed-files-pr.outputs.templates_any_changed }}" >> $GITHUB_OUTPUT
             fi
           fi
-
-  validate_all_templates:
-    needs: get_params
-    name: Validate all templates
-    runs-on: ubuntu-latest
-    if: ${{ needs.get_params.outputs.any_changed != 'false' && (contains(needs.get_params.outputs.changed_files, '_modules') || contains(needs.get_params.outputs.changed_files, '.github') || contains(needs.get_params.outputs.changed_files, '.')) }}
-    permissions:
-      id-token: write
-    steps:
-      - name: Checkout files
-        uses: actions/checkout@v3
-      - name: Use Terraform
-        uses: hashicorp/setup-terraform@v2
-      - name: Use Just
-        uses: extractions/setup-just@v2
-      # - name: Pull Vault secrets from Vault
-      #   uses: hashicorp/vault-action@v2
-      #   with:
-      #     url: https://vault.polaris.rest
-      #     role: coder-templates
-      #     path: github
-      #     method: jwt
-      #     # jwtGithubAudience: sigstore
-      #     secrets: |
-      #       /ci-cd/coder-templates/pr VAULT_ROLE_ID ;
-      #       /ci-cd/coder-templates/pr VAULT_SECRET_ID
-      - name: Download Terraform packages
-        run: just init
-      - name: Validate templates
-        run: just validate
-      - name: Plan templates
-        run: just plan
-        env:
-          # TF_VAR_vault_role_id: ${{ env.VAULT_ROLE_ID }}
-          TF_VAR_vault_role_id: ${{ secrets.VAULT_ROLE_ID }}
-          # TF_VAR_vault_secret_id: ${{ env.VAULT_SECRET_ID }}
-          TF_VAR_vault_secret_id: ${{ secrets.VAULT_SECRET_ID }}
 
   validate_template:
     needs: get_params
     name: Validate template
     runs-on: ubuntu-latest
-    if: ${{ needs.get_params.outputs.any_changed != 'false' && !(contains(needs.get_params.outputs.changed_files, '_modules') || contains(needs.get_params.outputs.changed_files, '.github') || contains(needs.get_params.outputs.changed_files, '.')) }}
+    if: ${{ needs.get_params.outputs.any_changed != 'false' }}
     permissions:
       id-token: write
     strategy:
