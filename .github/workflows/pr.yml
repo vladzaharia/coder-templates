@@ -23,6 +23,7 @@ jobs:
           dir_names_max_depth: 1
           json: true
           files_ignore: |
+            _deprecated/**
             **/*.md
       - name: Get changed files
         id: changed-files
