@@ -101,9 +101,11 @@ jobs:
           CODER_URL: https://code.polaris.rest
           CODER_TEMPLATE_VERSION: ${{ needs.get_params.outputs.sha_short }}
           CODER_TEMPLATE_MESSAGE: ${{ inputs.message || needs.get_params.outputs.pr_title }}
-          # TF_VAR_vault_role_id: ${{ env.VAULT_ROLE_ID }}
+          # VAULT_ROLE_ID: ${{ env.VAULT_ROLE_ID }}
+          VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
           TF_VAR_vault_role_id: ${{ secrets.VAULT_ROLE_ID }}
-          # TF_VAR_vault_secret_id: ${{ env.VAULT_SECRET_ID }}
+          # VAULT_SECRET_ID: ${{ env.VAULT_SECRET_ID }}
+          VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
           TF_VAR_vault_secret_id: ${{ secrets.VAULT_SECRET_ID }}
 
   deploy_template:
@@ -151,7 +153,9 @@ jobs:
           CODER_TEMPLATE_VERSION: ${{ needs.get_params.outputs.sha_short }}
           CODER_TEMPLATE_DIR: ./${{ matrix.template }}
           CODER_TEMPLATE_MESSAGE: ${{ inputs.message || needs.get_params.outputs.pr_title }}
-          # TF_VAR_vault_role_id: ${{ env.VAULT_ROLE_ID }}
+          # VAULT_ROLE_ID: ${{ env.VAULT_ROLE_ID }}
+          VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
           TF_VAR_vault_role_id: ${{ secrets.VAULT_ROLE_ID }}
-          # TF_VAR_vault_secret_id: ${{ env.VAULT_SECRET_ID }}
+          # VAULT_SECRET_ID: ${{ env.VAULT_SECRET_ID }}
+          VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
           TF_VAR_vault_secret_id: ${{ secrets.VAULT_SECRET_ID }}
