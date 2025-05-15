@@ -114,7 +114,7 @@ variable "windsurf" {
     enabled = bool
   })
   default = {
-    enabled = true
+    enabled = false
   }
 }
 
