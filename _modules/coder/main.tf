@@ -11,47 +11,72 @@ data "coder_provisioner" "me" {}
 data "coder_workspace_owner" "me" {}
 
 locals {
-  # Default features - vscode is always true
-  default_features = ["ssh_helper", "port_forwarding_helper", "web_terminal"]
-
-  # Parse the selected features from the parameter
-  selected_features = var.ask_features ? jsondecode(data.coder_parameter.features[0].value) : local.default_features
-
-  # Check if each feature is selected - vscode is always true
-  ssh_helper_enabled = contains(local.selected_features, "ssh_helper")
-  port_forwarding_helper_enabled = contains(local.selected_features, "port_forwarding_helper")
-  web_terminal_enabled = contains(local.selected_features, "web_terminal")
+  # Check if each feature is selected - vscode web is always true
+  ssh_helper_enabled = var.ask_features ? try(data.coder_parameter.ssh_enabled[0].value, true) : true
+  port_forwarding_helper_enabled = var.ask_features ? try(data.coder_parameter.port_forwarding_enabled[0].value, true) : true
+  web_terminal_enabled = var.ask_features ? try(data.coder_parameter.web_terminal_enabled[0].value, true) : true
+  vscode_enabled = var.ask_features ? try(data.coder_parameter.vscode_enabled[0].value, true) : true
+  vscode_insiders_enabled = var.ask_features ? try(data.coder_parameter.vscode_insiders_enabled[0].value, false) : false
 }
 
-data "coder_parameter" "features" {
+data "coder_parameter" "vscode_enabled" {
   count        = var.ask_features ? 1 : 0
-  name         = "features"
-  display_name = "Coder Features"
-  description  = "Select which Coder features you want to enable in your workspace."
-  type         = "list(string)"
-  default      = jsonencode(local.default_features)
+  name         = "vscode_enabled"
+  display_name = "VS Code Desktop"
+  description  = "Enable VS Code Desktop for your workspace"
+  type         = "bool"
+  default      = true
   mutable      = true
-  icon         = "/icon/widgets.svg"
-  form_type    = "multi-select"
-  order        = 475
+  icon         = "/icon/code.svg"
+  order        = 400
+}
 
-  option {
-    name  = "SSH"
-    value = "ssh_helper"
-    icon  = "/icon/ssh.svg"
-  }
+data "coder_parameter" "vscode_insiders_enabled" {
+  count        = var.ask_features ? 1 : 0
+  name         = "vscode_insiders_enabled"
+  display_name = "VS Code Insiders"
+  description  = "Enable VS Code Insiders for your workspace"
+  type         = "bool"
+  default      = false
+  mutable      = true
+  icon         = "/icon/code-insiders.svg"
+  order        = 405
+}
 
-  option {
-    name  = "Port Forwarding"
-    value = "port_forwarding_helper"
-    icon  = "/icon/port.svg"
-  }
+data "coder_parameter" "ssh_enabled" {
+  count        = var.ask_features ? 1 : 0
+  name         = "ssh_enabled"
+  display_name = "SSH"
+  description  = "Enable SSH access to your workspace"
+  type         = "bool"
+  default      = true
+  mutable      = true
+  icon         = "/icon/terminal.svg"
+  order        = 500
+}
 
-  option {
-    name  = "Web Terminal"
-    value = "web_terminal"
-    icon  = "/icon/terminal.svg"
-  }
+data "coder_parameter" "port_forwarding_enabled" {
+  count        = var.ask_features ? 1 : 0
+  name         = "port_forwarding_enabled"
+  display_name = "Port Forwarding"
+  description  = "Enable port forwarding for your workspace"
+  type         = "bool"
+  default      = true
+  mutable      = true
+  icon         = "/icon/database.svg"
+  order        = 505
+}
+
+data "coder_parameter" "web_terminal_enabled" {
+  count        = var.ask_features ? 1 : 0
+  name         = "web_terminal_enabled"
+  display_name = "Web Terminal"
+  description  = "Enable web terminal for your workspace"
+  type         = "bool"
+  default      = true
+  mutable      = true
+  icon         = "/icon/terminal.svg"
+  order        = 510
 }
 
 module "coder-login" {
@@ -73,7 +98,8 @@ resource "coder_agent" "main" {
   order = 10
 
   display_apps {
-    vscode = true
+    vscode = local.vscode_enabled
+    vscode_insiders = local.vscode_insiders_enabled
     ssh_helper = local.ssh_helper_enabled
     port_forwarding_helper = local.port_forwarding_helper_enabled
     web_terminal = local.web_terminal_enabled

@@ -132,6 +132,6 @@ variable "blink" {
     enabled = bool
   })
   default = {
-    enabled = true
+    enabled = false
   }
 }

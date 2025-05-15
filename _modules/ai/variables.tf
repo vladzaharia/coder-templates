@@ -78,3 +78,10 @@ variable "goose" {
     enabled = false
   }
 }
+
+# Ask user's AI choices
+variable "ask_ai" {
+  description = "Ask user's AI tool choices"
+  type        = bool
+  default     = true
+}
