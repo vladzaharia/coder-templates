@@ -25,19 +25,19 @@ default:
     @just --choose
 
 # Initialize Terraform template(s) and download packages
-init template=DEFAULT: (ln-modules template) (_run template 'init')
+init template=DEFAULT: (ln-modules template) (_run template 'terraform init')
 
 # Validate Terraform template(s) and common modules
-validate template=DEFAULT: (init template) && (_run template 'validate')
+validate template=DEFAULT: (init template) && (_run template 'terraform validate')
 
 # Plan Terraform template(s)
-plan template=DEFAULT: (init template) && (_run_nc template 'plan')
+plan template=DEFAULT: (init template) && (_run_nc template 'terraform plan')
 
 # Format Terraform template(s) and common modules
-format template=DEFAULT: (_run template 'fmt')
+format template=DEFAULT: (_run template 'terraform fmt')
 
 # Upgrade Terraform template(s) and common modules
-upgrade template=DEFAULT: (_run template 'init -upgrade')
+upgrade template=DEFAULT: (_run template 'terraform init -upgrade')
 
 # Run Terraform command on template(s) and common modules
 terraform command template=DEFAULT *FLAGS='':
@@ -48,8 +48,20 @@ terraform command template=DEFAULT *FLAGS='':
         just _run '{{template}}' '{{replace(command, '-nc', '')}} {{FLAGS}}'
     fi
 
+# Setup modules in template(s) using `ln -s`
+[private]
+ln-modules template=DEFAULT: (clean-modules template) (_run_nc template 'ln -s -T ../_modules ./_modules')
+
+# Setup modules in template(s) using `cp -R`
+[private]
+cp-modules template=DEFAULT: (clean-modules template) (_run_nc template 'cp -R ../_modules ./_modules')
+
+# Clean up per-template modules
+[private]
+clean-modules template=DEFAULT: (_run_nc template 'rm -rf ./_modules')
+
 # Deploy Coder template(s)
-deploy template=DEFAULT: (plan template) (ln-modules template)
+deploy template=DEFAULT: (plan template) (cp-modules template)
     #!/bin/sh
     if [ '{{ template }}' = '{{ DEFAULT }}' ]; then
     	just _log '{{ INFO }}' 'Deploying all templates...'
@@ -66,43 +78,6 @@ deploy template=DEFAULT: (plan template) (ln-modules template)
         fi
     fi
     just _log '{{ SUCCESS }}' "Successfully deployed template(s)!"
-
-ln-modules template=DEFAULT: (clean-modules template)
-    #!/bin/sh
-    if [ '{{ template }}' = '{{ DEFAULT }}' ]; then
-    	just _log '{{ INFO }}' 'Setting up all templates...'
-    	for folder in `find . -maxdepth 2 -mindepth 1 -type d -not -name '.*' -not -path './_modules/*' -not -path './.*/*' -not -name 'build' -not -name '_modules' -printf '%f '`; do 
-    		just _log '{{ INFO }}' "Setting up template {{ GREY }}$folder{{ NORMAL }}..."
-            cd "./$folder"
-            ln -s -T ../_modules ./_modules
-            cd ../
-    	done
-    else
-    	just _log '{{ INFO }}' 'Setting up template {{ GREY }}{{ template }}{{ NORMAL }}...'
-        cd {{ template }}
-        ln -s -T ../_modules ./_modules
-        cd ../
-    fi
-    just _log '{{ SUCCESS }}' "Successfully set up template(s)!"
-
-clean-modules template=DEFAULT: 
-    #!/bin/sh
-    if [ '{{ template }}' = '{{ DEFAULT }}' ]; then
-    	just _log '{{ INFO }}' 'Cleaning up all templates...'
-    	for folder in `find . -maxdepth 2 -mindepth 1 -type d -not -name '.*' -not -path './_modules/*' -not -path './.*/*' -not -name 'build' -not -name '_modules' -printf '%f '`; do 
-    		just _log '{{ INFO }}' "Cleaning up template modules {{ GREY }}$folder{{ NORMAL }}..."
-            cd "./$folder"
-            rm -rf ./_modules
-            cd ../
-    	done
-    else
-    	just _log '{{ INFO }}' 'Cleaning up template modules {{ GREY }}{{ template }}{{ NORMAL }}...'
-        cd {{ template }}
-        rm -rf ./_modules
-        cd ../
-    fi
-    just _log '{{ SUCCESS }}' "Successfully cleaned up template(s)!"
-
 
 # Run a command across Terraform templates and common modules
 _run template command:
@@ -127,8 +102,8 @@ _run_nc template command:
     just _log '{{ SUCCESS }}' 'Succesffully ran {{ GREY }}{{ command }}{{ NORMAL }} on templates!'
 
 # Run a command on a single folder
-_run-one folder command: (_log INFO "Running " + GREY + "terraform " + command + NORMAL + " in " + BLACK + folder + NORMAL)
-    @cd {{ folder }} && terraform {{ command }}
+_run-one folder command: (_log INFO "Running " + GREY + command + NORMAL + " in " + BLACK + folder + NORMAL)
+    @cd {{ folder }} && {{ command }}
 
 # Log to console
 _log level message:
