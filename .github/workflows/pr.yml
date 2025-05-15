@@ -30,8 +30,13 @@ jobs:
         id: changed-files
         run: |
           if [[ "${{github.event_name}}" == "pull_request" ]]; then
-            echo "changed_files=${{ steps.changed-files-pr.outputs.all_changed_files }}" >> $GITHUB_OUTPUT
-            echo "any_changed=${{ steps.changed-files-pr.outputs.any_changed }}" >> $GITHUB_OUTPUT
+            if [[ "${{ steps.changed-files-pr.outputs.all_changed_files }}" =~ "\.github|\.|_modules" ]]; then
+              echo $(tree -J -d -L 1 | jq -c '.[0].contents | map(.name) | map(select(startswith("_") | not))' | sed 's/"/\\"/g') >> $GITHUB_OUTPUT
+              echo "any_changed=true" >> $GITHUB_OUTPUT
+            else
+              echo "changed_files=${{ steps.changed-files-pr.outputs.all_changed_files }}" >> $GITHUB_OUTPUT
+              echo "any_changed=${{ steps.changed-files-pr.outputs.any_changed }}" >> $GITHUB_OUTPUT
+            fi
           fi
 
   validate_all_templates:

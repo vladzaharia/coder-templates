@@ -53,14 +53,12 @@ jobs:
       - name: Get changed files
         id: changed-files
         run: |
-          if [[ "${{github.event_name}}" == "push" ]]; then
+          if [[ "${{github.event_name}}" == "workflow_dispatch" || "${{ steps.changed-files-pr.outputs.all_changed_files }}" =~ "\.github|\.|_modules" ]]; then
+            echo $(tree -J -d -L 1 | jq -c '.[0].contents | map(.name) | map(select(startswith("_") | not))' | sed 's/"/\\"/g') >> $GITHUB_OUTPUT
+            echo "any_changed=true" >> $GITHUB_OUTPUT
+          else if [[ "${{github.event_name}}" == "push" ]]; then
             echo "changed_files=${{ steps.changed-files-push.outputs.all_changed_files }}" >> $GITHUB_OUTPUT
             echo "any_changed=${{ steps.changed-files-push.outputs.any_changed }}" >> $GITHUB_OUTPUT
-          fi
-
-          if [[ "${{github.event_name}}" == "workflow_dispatch" ]]; then
-            echo "changed_files=${{ steps.changed-files-manual.outputs.folders }}" >> $GITHUB_OUTPUT
-            echo "any_changed=true" >> $GITHUB_OUTPUT
           fi
 
   deploy_all_templates:
