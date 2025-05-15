@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       message:
-        description: 'Message to use for the template push, defaults to the commit message'
+        description: "Message to use for the template push, defaults to the commit message"
         required: false
         type: string
 
@@ -67,7 +67,7 @@ jobs:
     needs: get_params
     name: Deploy all templates
     runs-on: ubuntu-latest
-    if: ${{ contains(needs.get_params.outputs.changed_files, '_modules') || contains(needs.get_params.outputs.all_changed_files, '.github') || contains(needs.get_params.outputs.all_changed_files, '.') }}
+    if: ${{ contains(needs.get_params.outputs.changed_files, '_modules') || contains(needs.get_params.outputs.changed_files, '.github') || contains(needs.get_params.outputs.changed_files, '.') }}
     permissions:
       id-token: write
     steps:
@@ -92,25 +92,25 @@ jobs:
       - name: Setup Coder
         uses: coder/setup-action@v1
         with:
-          access_url: 'https://code.polaris.rest'
+          access_url: "https://code.polaris.rest"
           # coder_session_token: ${{ env.CODER_SESSION_TOKEN }}
           coder_session_token: ${{ secrets.CODER_SESSION_TOKEN }}
       - name: Push templates
         run: just deploy
         env:
-            CODER_URL: https://code.polaris.rest
-            CODER_TEMPLATE_VERSION: ${{ needs.get_params.outputs.sha_short }}
-            CODER_TEMPLATE_MESSAGE: ${{ inputs.message || needs.get_params.outputs.pr_title }}
-            # TF_VAR_vault_role_id: ${{ env.VAULT_ROLE_ID }}
-            TF_VAR_vault_role_id: ${{ secrets.VAULT_ROLE_ID }}
-            # TF_VAR_vault_secret_id: ${{ env.VAULT_SECRET_ID }}
-            TF_VAR_vault_secret_id: ${{ secrets.VAULT_SECRET_ID }}
+          CODER_URL: https://code.polaris.rest
+          CODER_TEMPLATE_VERSION: ${{ needs.get_params.outputs.sha_short }}
+          CODER_TEMPLATE_MESSAGE: ${{ inputs.message || needs.get_params.outputs.pr_title }}
+          # TF_VAR_vault_role_id: ${{ env.VAULT_ROLE_ID }}
+          TF_VAR_vault_role_id: ${{ secrets.VAULT_ROLE_ID }}
+          # TF_VAR_vault_secret_id: ${{ env.VAULT_SECRET_ID }}
+          TF_VAR_vault_secret_id: ${{ secrets.VAULT_SECRET_ID }}
 
   deploy_template:
     needs: get_params
     name: Deploy template
     runs-on: ubuntu-latest
-    if: ${{ needs.get_params.outputs.any_changed != 'false' && !contains(needs.get_params.outputs.changed_files, '_modules') && !contains(needs.get_params.outputs.all_changed_files, '.') && !contains(needs.get_params.outputs.all_changed_files, '_modules') }}
+    if: ${{ needs.get_params.outputs.any_changed != 'false' && !(contains(needs.get_params.outputs.changed_files, '_modules') || contains(needs.get_params.outputs.changed_files, '.github') || contains(needs.get_params.outputs.changed_files, '.')) }}
     permissions:
       id-token: write
     strategy:
@@ -139,19 +139,19 @@ jobs:
       - name: Setup Coder
         uses: coder/setup-action@v1
         with:
-          access_url: 'https://code.polaris.rest'
+          access_url: "https://code.polaris.rest"
           # coder_session_token: ${{ env.CODER_SESSION_TOKEN }}
           coder_session_token: ${{ secrets.CODER_SESSION_TOKEN }}
       - name: Push template
         run: just deploy ${{ matrix.template }}
         if: ${{ !startsWith(matrix.template, '.') }}
         env:
-            CODER_URL: https://code.polaris.rest
-            CODER_TEMPLATE_NAME: ${{ matrix.template }}
-            CODER_TEMPLATE_VERSION: ${{ needs.get_params.outputs.sha_short }}
-            CODER_TEMPLATE_DIR: ./${{ matrix.template }}
-            CODER_TEMPLATE_MESSAGE: ${{ inputs.message || needs.get_params.outputs.pr_title }}
-            # TF_VAR_vault_role_id: ${{ env.VAULT_ROLE_ID }}
-            TF_VAR_vault_role_id: ${{ secrets.VAULT_ROLE_ID }}
-            # TF_VAR_vault_secret_id: ${{ env.VAULT_SECRET_ID }}
-            TF_VAR_vault_secret_id: ${{ secrets.VAULT_SECRET_ID }}
+          CODER_URL: https://code.polaris.rest
+          CODER_TEMPLATE_NAME: ${{ matrix.template }}
+          CODER_TEMPLATE_VERSION: ${{ needs.get_params.outputs.sha_short }}
+          CODER_TEMPLATE_DIR: ./${{ matrix.template }}
+          CODER_TEMPLATE_MESSAGE: ${{ inputs.message || needs.get_params.outputs.pr_title }}
+          # TF_VAR_vault_role_id: ${{ env.VAULT_ROLE_ID }}
+          TF_VAR_vault_role_id: ${{ secrets.VAULT_ROLE_ID }}
+          # TF_VAR_vault_secret_id: ${{ env.VAULT_SECRET_ID }}
+          TF_VAR_vault_secret_id: ${{ secrets.VAULT_SECRET_ID }}

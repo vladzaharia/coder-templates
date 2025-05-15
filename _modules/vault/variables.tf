@@ -33,6 +33,6 @@ variable "vault_secret_id" {
 variable "path" {
   type        = string
   description = "Path of secrets to get from Vault"
-  nullable = true
-  default = null
+  nullable    = true
+  default     = null
 }

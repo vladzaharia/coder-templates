@@ -12,7 +12,7 @@ data "coder_external_auth" "github" {
 }
 
 data "coder_parameter" "github_repo" {
-  count = var.github.enabled ? 1 : 0
+  count        = var.github.enabled ? 1 : 0
   order        = 100
   name         = "github_repo"
   display_name = "GitHub repo"
