@@ -81,7 +81,7 @@ jobs:
           VALIDATE_MARKDOWN: true
           VALIDATE_MARKDOWN_PRETTIER: true
           FIX_MARKDOWN_PRETTIER: true
-          VALIDATE_TERRAFORM_FMT: ture
+          VALIDATE_TERRAFORM_FMT: true
           FIX_TERRAFORM_FMT: true
           VALIDATE_TERRAFORM_TFLINT: true
           VALIDATE_TERRAFORM_TERRASCAN: true
@@ -153,9 +153,11 @@ jobs:
           # TF_VAR_vault_secret_id: ${{ env.VAULT_SECRET_ID }}
           TF_VAR_vault_secret_id: ${{ secrets.VAULT_SECRET_ID }}
       - name: Comment PR with plan result
-        uses: robburger/terraform-pr-commenter@v1
+        uses: Jimdo/terraform-pr-commenter@v1
+        if: always() && github.ref != 'refs/heads/main' && (steps.plan.outcome == 'success' || steps.plan.outcome == 'failure')
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TF_WORKSPACE: ${{ matrix.template }}
         with:
           commenter_type: plan
           commenter_input: ${{ format('{0}{1}', steps.plan.outputs.stdout, steps.plan.outputs.stderr) }}
