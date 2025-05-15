@@ -35,7 +35,7 @@ data "coder_parameter" "vault_project" {
 }
 
 data "vault_generic_secret" "path" {
-  count = var.path != null || data.coder_parameter.vault_project[0].value != "" ? 1 : 0
+  count = var.path != null || data.coder_parameter.vault_project[0] && data.coder_parameter.vault_project[0].value != "" ? 1 : 0
   path  = "dotenv/${var.path != null ? var.path : data.coder_parameter.vault_project[0].value}/dev"
 }
 
