@@ -33,6 +33,7 @@ jobs:
               - '!justfile'
 
           files_ignore: |
+            .github/workflows/ci.yml
             _deprecated/**
             **/*.md
             LICENSE
