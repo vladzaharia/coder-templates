@@ -221,7 +221,7 @@ resource "docker_image" "main" {
   name  = "coder-${data.coder_workspace.main.id}"
   count = var.build ? 1 : 0
   build {
-    context = "../_modules/docker/build"
+    context = "./build"
     build_args = {
       IMAGE       = local.image
       USER        = data.coder_workspace_owner.me.name
