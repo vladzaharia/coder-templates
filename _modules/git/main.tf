@@ -42,3 +42,14 @@ module "git_clone" {
   agent_id = var.agent_id
   url      = "https://github.com/${var.repo != null ? var.repo : data.coder_parameter.github_repo[0].value}"
 }
+
+resource "coder_app" "github" {
+  count        = var.github.enabled ? 1 : 0
+  agent_id     = var.agent_id
+  slug         = "github"
+  display_name = "GitHub Repository"
+  url          = "https://github.com/${var.repo != null ? var.repo : data.coder_parameter.github_repo[0].value}"
+  icon         = "/icon/github.svg"
+  external     = true
+  order        = 1000
+}

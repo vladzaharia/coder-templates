@@ -1,13 +1,58 @@
 terraform {
   required_providers {
     coder = {
-      source = "coder/coder"
+      source  = "coder/coder"
+      version = ">= 2.4.0"
     }
   }
 }
 
 data "coder_provisioner" "me" {}
 data "coder_workspace_owner" "me" {}
+
+locals {
+  # Default features - vscode is always true
+  default_features = ["ssh_helper", "port_forwarding_helper", "web_terminal"]
+
+  # Parse the selected features from the parameter
+  selected_features = var.ask_features ? jsondecode(data.coder_parameter.features[0].value) : local.default_features
+
+  # Check if each feature is selected - vscode is always true
+  ssh_helper_enabled = contains(local.selected_features, "ssh_helper")
+  port_forwarding_helper_enabled = contains(local.selected_features, "port_forwarding_helper")
+  web_terminal_enabled = contains(local.selected_features, "web_terminal")
+}
+
+data "coder_parameter" "features" {
+  count        = var.ask_features ? 1 : 0
+  name         = "features"
+  display_name = "Coder Features"
+  description  = "Select which Coder features you want to enable in your workspace."
+  type         = "list(string)"
+  default      = jsonencode(local.default_features)
+  mutable      = true
+  icon         = "/icon/widgets.svg"
+  form_type    = "multi-select"
+  order        = 475
+
+  option {
+    name  = "SSH"
+    value = "ssh_helper"
+    icon  = "/icon/ssh.svg"
+  }
+
+  option {
+    name  = "Port Forwarding"
+    value = "port_forwarding_helper"
+    icon  = "/icon/port.svg"
+  }
+
+  option {
+    name  = "Web Terminal"
+    value = "web_terminal"
+    icon  = "/icon/terminal.svg"
+  }
+}
 
 module "coder-login" {
   source   = "registry.coder.com/modules/coder-login/coder"
@@ -24,6 +69,15 @@ resource "coder_agent" "main" {
     GIT_AUTHOR_EMAIL    = "${data.coder_workspace_owner.me.email}"
     GIT_COMMITTER_EMAIL = "${data.coder_workspace_owner.me.email}"
   }, var.env)
+
+  order = 10
+
+  display_apps {
+    vscode = true
+    ssh_helper = local.ssh_helper_enabled
+    port_forwarding_helper = local.port_forwarding_helper_enabled
+    web_terminal = local.web_terminal_enabled
+  }
 
   startup_script = <<-EOT
     set -e
