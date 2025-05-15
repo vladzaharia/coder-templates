@@ -40,7 +40,9 @@ jobs:
         id: get-templates
         if: steps.changed-files-pr.outputs.common_any_changed == 'true'
         run: |
-          echo "folders=$(tree -J -d -L 1 | jq -c '.[0].contents | map(.name) | map(select(startswith("_") | not))' | sed 's/"/\\"/g')" >> $GITHUB_OUTPUT
+          # Get all directories that don't start with underscore or dot
+          FOLDERS=$(find . -maxdepth 1 -type d -not -path "*/\.*" -not -path "./_*" -not -path "." | sed 's|^\./||' | jq -R . | jq -s .)
+          echo "folders=$FOLDERS" >> $GITHUB_OUTPUT
 
       - name: Get changed files
         id: changed-files
