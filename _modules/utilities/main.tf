@@ -10,59 +10,59 @@ terraform {
 data "coder_workspace" "main" {}
 
 locals {
-  # Default selections based on enabled settings
-  default_utilities = concat(
-    var.kasm.enabled ? ["kasm"] : [],
-    var.file.enabled ? ["file"] : [],
-    var.jupyter.enabled ? ["jupyter"] : [],
-    var.rdp.enabled ? ["rdp"] : []
-  )
-
-  # Parse the selected utilities from the parameter
-  selected_utilities = var.ask_utilities ? jsondecode(data.coder_parameter.utilities[0].value) : local.default_utilities
-
   # Check if each utility is selected
-  kasm_enabled = var.kasm.enabled && (contains(local.selected_utilities, "kasm") || !var.ask_utilities)
-  file_enabled = var.file.enabled && (contains(local.selected_utilities, "file") || !var.ask_utilities)
-  jupyter_enabled = var.jupyter.enabled && (contains(local.selected_utilities, "jupyter") || !var.ask_utilities)
-  rdp_enabled = var.rdp.enabled && (contains(local.selected_utilities, "rdp") || !var.ask_utilities)
+  kasm_enabled = var.kasm.enabled && (var.ask_utilities ? try(data.coder_parameter.kasm_enabled[0].value, var.kasm.enabled) : var.kasm.enabled)
+  file_enabled = var.file.enabled && (var.ask_utilities ? try(data.coder_parameter.file_enabled[0].value, var.file.enabled) : var.file.enabled)
+  jupyter_enabled = var.jupyter.enabled && (var.ask_utilities ? try(data.coder_parameter.jupyter_enabled[0].value, var.jupyter.enabled) : var.jupyter.enabled)
+  rdp_enabled = var.rdp.enabled && (var.ask_utilities ? try(data.coder_parameter.rdp_enabled[0].value, var.rdp.enabled) : var.rdp.enabled)
 }
 
-data "coder_parameter" "utilities" {
-  count        = var.ask_utilities ? 1 : 0
-  name         = "utilities"
-  display_name = "Utilities"
-  description  = "Select which utilities you want to use in your workspace."
-  type         = "list(string)"
-  default      = jsonencode(local.default_utilities)
+data "coder_parameter" "kasm_enabled" {
+  count        = var.ask_utilities && var.kasm.enabled ? 1 : 0
+  name         = "kasm_enabled"
+  display_name = "VNC Viewer"
+  description  = "Enable VNC Viewer for desktop environment"
+  type         = "bool"
+  default      = var.kasm.enabled
   mutable      = true
-  icon         = "/icon/widgets.svg"
-  form_type    = "multi-select"
-  order        = 450
+  icon         = "/icon/desktop.svg"
+  order        = 475
+}
 
-  option {
-    name  = "VNC Viewer"
-    value = "kasm"
-    icon  = "/icon/desktop.svg"
-  }
+data "coder_parameter" "file_enabled" {
+  count        = var.ask_utilities && var.file.enabled ? 1 : 0
+  name         = "file_enabled"
+  display_name = "File Browser"
+  description  = "Enable File Browser"
+  type         = "bool"
+  default      = var.file.enabled
+  mutable      = true
+  icon         = "/icon/folder.svg"
+  order        = 480
+}
 
-  option {
-    name  = "File Browser"
-    value = "file"
-    icon  = "/icon/folder.svg"
-  }
+data "coder_parameter" "jupyter_enabled" {
+  count        = var.ask_utilities && var.jupyter.enabled ? 1 : 0
+  name         = "jupyter_enabled"
+  display_name = "JupyterLab"
+  description  = "Enable JupyterLab"
+  type         = "bool"
+  default      = var.jupyter.enabled
+  mutable      = true
+  icon         = "/icon/jupyter.svg"
+  order        = 485
+}
 
-  option {
-    name  = "JupyterLab"
-    value = "jupyter"
-    icon  = "/icon/jupyter.svg"
-  }
-
-  option {
-    name  = "Remote Desktop (RDP)"
-    value = "rdp"
-    icon  = "/icon/rdp.svg"
-  }
+data "coder_parameter" "rdp_enabled" {
+  count        = var.ask_utilities && var.rdp.enabled ? 1 : 0
+  name         = "rdp_enabled"
+  display_name = "Remote Desktop (RDP)"
+  description  = "Enable Remote Desktop"
+  type         = "bool"
+  default      = var.rdp.enabled
+  mutable      = true
+  icon         = "/icon/rdp.svg"
+  order        = 490
 }
 
 module "kasmvnc" {

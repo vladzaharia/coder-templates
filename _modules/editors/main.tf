@@ -11,83 +11,98 @@ data "coder_workspace" "main" {}
 data "coder_workspace_owner" "me" {}
 
 locals {
-  # Default selections based on enabled settings
-  default_editors = concat(
-    var.code_server.enabled ? ["code-server"] : [],
-    var.code_web.enabled ? ["code-web"] : [],
-    var.jetbrains.enabled && var.jetbrains.default != "FL" ? ["jetbrains"] : [],
-    var.jetbrains.enabled && var.jetbrains.default == "FL" ? ["fleet"] : [],
-    var.cursor.enabled ? ["cursor"] : [],
-    var.windsurf.enabled ? ["windsurf"] : [],
-    var.blink.enabled ? ["blink"] : []
-  )
-
-  # Parse the selected editors from the parameter
-  selected_editors = var.ask_editors ? jsondecode(data.coder_parameter.editors[0].value) : local.default_editors
-
   # Check if each editor is selected
-  code_server_enabled = var.code_server.enabled && (contains(local.selected_editors, "code-server") || !var.ask_editors)
-  code_web_enabled = var.code_web.enabled && (contains(local.selected_editors, "code-web") || !var.ask_editors)
-  jetbrains_enabled = var.jetbrains.enabled && (contains(local.selected_editors, "jetbrains") || !var.ask_editors) && var.jetbrains.default != "FL"
-  fleet_enabled = var.jetbrains.enabled && (contains(local.selected_editors, "fleet") || !var.ask_editors) && var.jetbrains.default == "FL"
-  cursor_enabled = var.cursor.enabled && (contains(local.selected_editors, "cursor") || !var.ask_editors)
-  windsurf_enabled = var.windsurf.enabled && (contains(local.selected_editors, "windsurf") || !var.ask_editors)
-  blink_enabled = var.blink.enabled && (contains(local.selected_editors, "blink") || !var.ask_editors)
+  code_server_enabled = var.code_server.enabled && (var.ask_editors ? try(data.coder_parameter.code_server_enabled[0].value, var.code_server.enabled) : var.code_server.enabled)
+  code_web_enabled = var.code_web.enabled && (var.ask_editors ? try(data.coder_parameter.code_web_enabled[0].value, var.code_web.enabled) : var.code_web.enabled)
+  jetbrains_enabled = var.jetbrains.enabled && var.jetbrains.default != "FL" && (var.ask_editors ? try(data.coder_parameter.jetbrains_enabled[0].value, var.jetbrains.enabled) : var.jetbrains.enabled)
+  fleet_enabled = var.jetbrains.enabled && var.jetbrains.default == "FL" && (var.ask_editors ? try(data.coder_parameter.fleet_enabled[0].value, var.jetbrains.enabled) : var.jetbrains.enabled)
+  cursor_enabled = var.cursor.enabled && (var.ask_editors ? try(data.coder_parameter.cursor_enabled[0].value, var.cursor.enabled) : var.cursor.enabled)
+  windsurf_enabled = var.windsurf.enabled && (var.ask_editors ? try(data.coder_parameter.windsurf_enabled[0].value, var.windsurf.enabled) : var.windsurf.enabled)
+  blink_enabled = var.blink.enabled && (var.ask_editors ? try(data.coder_parameter.blink_enabled[0].value, var.blink.enabled) : var.blink.enabled)
 }
 
-data "coder_parameter" "editors" {
-  count        = var.ask_editors ? 1 : 0
-  name         = "editors"
-  display_name = "Code Editors"
-  description  = "Select which code editors you want to use in your workspace."
-  type         = "list(string)"
-  default      = jsonencode(local.default_editors)
+data "coder_parameter" "code_server_enabled" {
+  count        = var.ask_editors && var.code_server.enabled ? 1 : 0
+  name         = "code_server_enabled"
+  display_name = "VS Code Server"
+  description  = "Enable VS Code Server"
+  type         = "bool"
+  default      = var.code_server.enabled
   mutable      = true
-  icon         = "/icon/widgets.svg"
-  form_type    = "multi-select"
-  order        = 400
+  icon         = "/icon/code.svg"
+  order        = 410
+}
 
-  option {
-    name  = "VS Code Server"
-    value = "code-server"
-    icon  = "/icon/code.svg"
-  }
+data "coder_parameter" "code_web_enabled" {
+  count        = var.ask_editors && var.code_web.enabled ? 1 : 0
+  name         = "code_web_enabled"
+  display_name = "VS Code Web"
+  description  = "Enable VS Code Web"
+  type         = "bool"
+  default      = var.code_web.enabled
+  mutable      = true
+  icon         = "/icon/code.svg"
+  order        = 415
+}
 
-  option {
-    name  = "VS Code Web"
-    value = "code-web"
-    icon  = "/icon/code.svg"
-  }
+data "coder_parameter" "fleet_enabled" {
+  count        = var.ask_editors && var.jetbrains.enabled && var.jetbrains.default == "FL" ? 1 : 0
+  name         = "fleet_enabled"
+  display_name = "Fleet"
+  description  = "Enable JetBrains Fleet"
+  type         = "bool"
+  default      = var.jetbrains.enabled
+  mutable      = true
+  icon         = "/icon/fleet.svg"
+  order        = 420
+}
 
-  option {
-    name  = "JetBrains Gateway"
-    value = "jetbrains"
-    icon  = "/icon/gateway.svg"
-  }
+data "coder_parameter" "jetbrains_enabled" {
+  count        = var.ask_editors && var.jetbrains.enabled && var.jetbrains.default != "FL" ? 1 : 0
+  name         = "jetbrains_enabled"
+  display_name = "JetBrains Gateway"
+  description  = "Enable JetBrains Gateway"
+  type         = "bool"
+  default      = var.jetbrains.enabled
+  mutable      = true
+  icon         = "/icon/gateway.svg"
+  order        = 425
+}
 
-  option {
-    name  = "Fleet"
-    value = "fleet"
-    icon  = "/icon/fleet.svg"
-  }
+data "coder_parameter" "cursor_enabled" {
+  count        = var.ask_editors && var.cursor.enabled ? 1 : 0
+  name         = "cursor_enabled"
+  display_name = "Cursor"
+  description  = "Enable Cursor"
+  type         = "bool"
+  default      = var.cursor.enabled
+  mutable      = true
+  icon         = "/icon/cursor.svg"
+  order        = 430
+}
 
-  option {
-    name  = "Cursor"
-    value = "cursor"
-    icon  = "/icon/cursor.svg"
-  }
+data "coder_parameter" "windsurf_enabled" {
+  count        = var.ask_editors && var.windsurf.enabled ? 1 : 0
+  name         = "windsurf_enabled"
+  display_name = "Windsurf"
+  description  = "Enable Windsurf"
+  type         = "bool"
+  default      = var.windsurf.enabled
+  mutable      = true
+  icon         = "/icon/windsurf.svg"
+  order        = 435
+}
 
-  option {
-    name  = "Windsurf"
-    value = "windsurf"
-    icon  = "/icon/windsurf.svg"
-  }
-
-  option {
-    name  = "Blink Shell"
-    value = "blink"
-    icon  = "https://assets.polaris.rest/Logos/blink_alt.svg"
-  }
+data "coder_parameter" "blink_enabled" {
+  count        = var.ask_editors && var.blink.enabled ? 1 : 0
+  name         = "blink_enabled"
+  display_name = "Blink Shell"
+  description  = "Enable Blink Shell (for iOS)"
+  type         = "bool"
+  default      = var.blink.enabled
+  mutable      = true
+  icon         = "https://assets.polaris.rest/Logos/blink_alt.svg"
+  order        = 440
 }
 
 module "code-server" {
