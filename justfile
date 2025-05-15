@@ -72,15 +72,15 @@ deploy template=DEFAULT: (_cp-modules template)
 
 # Setup modules in template(s) using `ln -s`
 [private]
-_ln-modules template=DEFAULT: (_rm-modules template) (_run-no-modules template 'ln -s -T ../_modules ./_modules')
+_ln-modules template=DEFAULT: (_rm-modules template) (_run-no-modules template 'ln -s -T ../_modules ./_modules') (_run-no-modules template 'ln -s -T ../_modules/docker/build ./build')
 
 # Setup modules in template(s) using `cp -R`
 [private]
-_cp-modules template=DEFAULT: (_rm-modules template) (_run-no-modules template 'cp -R ../_modules ./_modules')
+_cp-modules template=DEFAULT: (_rm-modules template) (_run-no-modules template 'cp -R ../_modules ./_modules') (_run-no-modules template 'cp -R ../_modules/docker/build ./build')
 
 # Clean up per-template modules
 [private]
-_rm-modules template=DEFAULT: (_run-no-modules template 'rm -rf ./_modules')
+_rm-modules template=DEFAULT: (_run-no-modules template 'rm -rf ./_modules ./build')
 
 # Run a command across Terraform templates and common modules
 _run template command:
