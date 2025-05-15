@@ -57,12 +57,14 @@ deploy template=DEFAULT: (_cp-modules template)
     		just _log '{{ INFO }}' "Deploying template {{ GREY }}$folder{{ NORMAL }}..."
     		if ! (coder templates push "$folder" --directory "./$folder" --yes --name="$CODER_TEMPLATE_VERSION" --message="$CODER_TEMPLATE_MESSAGE" --variable vault_role_id="$VAULT_ROLE_ID" --variable vault_secret_id="$VAULT_SECRET_ID"); then
                 just _log '{{ ERR }}' "Failed deploying template {{ GREY }}$folder{{ NORMAL }}!"
+                exit 1
             fi
     	done
     else
     	just _log '{{ INFO }}' 'Deploying template {{ GREY }}{{ template }}{{ NORMAL }}...'
         if ! (coder templates push "{{ template }}" --directory "./{{ template }}" --yes --name="$CODER_TEMPLATE_VERSION" --message="$CODER_TEMPLATE_MESSAGE" --variable vault_role_id="$VAULT_ROLE_ID" --variable vault_secret_id="$VAULT_SECRET_ID"); then
             just _log '{{ ERR }}' "Failed deploying template {{ GREY }}$folder{{ NORMAL }}!"
+            exit 1
         fi
     fi
     just _log '{{ SUCCESS }}' "Successfully deployed template(s)!"
