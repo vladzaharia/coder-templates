@@ -10,6 +10,11 @@
 
         "eamodio.gitlens",
         "GitHub.vscode-pull-request-github",
-        "stkb.rewrap"
+        "coder.coder-remote",
+        "irongeek.vscode-env",
+        "github.vscode-github-actions",
+        "skellock.just",
+        "yzhang.markdown-all-in-one",
+        "nefrob.vscode-just-syntax"
     ]
 }

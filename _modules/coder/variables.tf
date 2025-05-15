@@ -9,3 +9,9 @@ variable "init_script" {
   type        = string
   default     = ""
 }
+
+variable "ask_features" {
+  description = "Ask user's feature choices"
+  type        = bool
+  default     = true
+}

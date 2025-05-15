@@ -114,8 +114,11 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# Per-template files
 */_modules
 _deprecated/*/_modules
 !./_modules/**
+*/build
+_deprecated/*/_build
 
 # End of https://www.toptal.com/developers/gitignore/api/macos,windows,linux,terraform,dotenv

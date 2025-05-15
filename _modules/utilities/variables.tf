@@ -4,6 +4,12 @@ variable "agent_id" {
   type        = string
 }
 
+variable "ask_utilities" {
+  description = "Ask user's utility choices"
+  type        = bool
+  default     = true
+}
+
 # Kasm VNC Server
 variable "kasm" {
   description = "Kasm VNC"
