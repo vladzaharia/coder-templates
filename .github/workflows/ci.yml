@@ -110,7 +110,7 @@ jobs:
     needs: get_params
     name: Deploy template
     runs-on: ubuntu-latest
-    if: ${{ needs.get_params.outputs.any_changed != 'false' && !contains(needs.get_params.outputs.changed_files, '_modules') && !contains(needs.get_params.outputs.changed_files, '.') && !contains(needs.get_params.outputs.changed_files, '.github') }}
+    if: ${{ needs.get_params.outputs.any_changed != 'false' && !(contains(needs.get_params.outputs.changed_files, '_modules') || contains(needs.get_params.outputs.changed_files, '.github') || contains(needs.get_params.outputs.changed_files, '.')) }}
     permissions:
       id-token: write
     strategy:
