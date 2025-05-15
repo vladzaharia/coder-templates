@@ -5,17 +5,31 @@ tags: [local, docker, github, vault]
 icon: /icon/docker.png
 ---
 
-# dev-container
+# Dev Container
 
-To get started, run `coder templates init`. When prompted, select this template.
-Follow the on-screen instructions to proceed.
+This template creates a development environment using the devcontainer.json specification from a GitHub repository.
 
-## Editing the image
+## Features
 
-Edit the `Dockerfile` and run `coder templates push` to update workspaces.
+- Uses devcontainer.json specifications for consistent environments
+- Automatic GitHub repository cloning
+- Docker-based development environment
+- Integrated code-server (VS Code in browser)
+- HashiCorp Vault integration for secrets management
+- Compatible with Visual Studio Code Dev Containers
 
-## code-server
+## Getting Started
 
-`code-server` is installed via the `init_script` argument in the `coder_agent`
-resource block. The `coder_app` resource is defined to access `code-server` through
-the dashboard UI over `localhost:13337`.
+Run `coder templates init` and select this template to get started.
+
+## Configuration
+
+When creating a workspace, you'll need to provide:
+
+- GitHub repository URL containing a devcontainer.json file
+- Vault credentials (if using Vault integration)
+
+## Customization
+
+The environment is defined by the devcontainer.json file in your GitHub repository.
+To modify the environment, update this file in your repository.

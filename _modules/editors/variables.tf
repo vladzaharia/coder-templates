@@ -10,6 +10,13 @@ variable "agent_id" {
   type        = string
 }
 
+variable "ask_editors" {
+  description = "Ask user's editor choices"
+
+  type    = bool
+  default = true
+}
+
 # VS Code Desktop
 variable "code_desktop" {
   description = "VS Code Desktop"
