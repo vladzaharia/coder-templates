@@ -36,12 +36,18 @@ jobs:
             _deprecated/**
             **/*.md
             LICENSE
+      - name: Get all templates
+        id: get-templates
+        if: steps.changed-files-pr.outputs.common_any_changed == 'true'
+        run: |
+          echo "folders=$(tree -J -d -L 1 | jq -c '.[0].contents | map(.name) | map(select(startswith("_") | not))' | sed 's/"/\\"/g')" >> $GITHUB_OUTPUT
+
       - name: Get changed files
         id: changed-files
         run: |
           if [[ "${{github.event_name}}" == "pull_request" ]]; then
             if [[ "${{ steps.changed-files-pr.outputs.common_any_changed }}" == "true" ]]; then
-              echo $(tree -J -d -L 1 | jq -c '.[0].contents | map(.name) | map(select(startswith("_") | not))' | sed 's/"/\\"/g') >> $GITHUB_OUTPUT
+              echo "changed_files=${{ steps.get-templates.outputs.folders }}" >> $GITHUB_OUTPUT
               echo "any_changed=true" >> $GITHUB_OUTPUT
             else
               echo "changed_files=${{ steps.changed-files-pr.outputs.templates_all_changed_files }}" >> $GITHUB_OUTPUT
