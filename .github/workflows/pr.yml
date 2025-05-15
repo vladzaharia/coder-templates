@@ -36,6 +36,9 @@ jobs:
             _deprecated/**
             **/*.md
             LICENSE
+      - name: Checkout files
+        uses: actions/checkout@v3
+        if: steps.changed-files-pr.outputs.common_any_changed == 'true'
       - name: Get all templates
         id: get-templates
         if: steps.changed-files-pr.outputs.common_any_changed == 'true'
