@@ -39,11 +39,9 @@ jobs:
         if: github.event_name == 'push'
         with:
           dir_names: true
-          dir_names_exclude_current_dir: true
           dir_names_max_depth: 1
           json: true
           files_ignore: |
-            .github/**/*
             **/*.md
       - name: Get changed files (manual)
         id: changed-files-manual
@@ -67,7 +65,7 @@ jobs:
     needs: get_params
     name: Deploy all templates
     runs-on: ubuntu-latest
-    if: ${{ contains(needs.get_params.outputs.changed_files, '_modules') || contains(needs.get_params.outputs.all_changed_files, '.github') }}
+    if: ${{ contains(needs.get_params.outputs.changed_files, '_modules') || contains(needs.get_params.outputs.all_changed_files, '.github') || contains(needs.get_params.outputs.all_changed_files, '.') }}
     permissions:
       id-token: write
     steps:
@@ -108,7 +106,7 @@ jobs:
     needs: get_params
     name: Deploy template
     runs-on: ubuntu-latest
-    if: ${{ needs.get_params.outputs.any_changed != 'false' && !contains(needs.get_params.outputs.changed_files, '_modules') && !contains(needs.get_params.outputs.all_changed_files, '_modules') }}
+    if: ${{ needs.get_params.outputs.any_changed != 'false' && !contains(needs.get_params.outputs.changed_files, '_modules') && !contains(needs.get_params.outputs.all_changed_files, '.') && !contains(needs.get_params.outputs.all_changed_files, '_modules') }}
     permissions:
       id-token: write
     strategy:

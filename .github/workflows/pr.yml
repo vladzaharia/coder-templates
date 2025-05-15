@@ -20,7 +20,6 @@ jobs:
         uses: tj-actions/changed-files@v39
         with:
           dir_names: true
-          dir_names_exclude_current_dir: true
           dir_names_max_depth: 1
           json: true
           files_ignore: |
@@ -37,7 +36,7 @@ jobs:
     needs: get_params
     name: Validate all templates
     runs-on: ubuntu-latest
-    if: ${{ contains(needs.get_params.outputs.all_changed_files, '_modules') || contains(needs.get_params.outputs.all_changed_files, '.github') }}
+    if: ${{ contains(needs.get_params.outputs.all_changed_files, '_modules') || contains(needs.get_params.outputs.all_changed_files, '.github') || contains(needs.get_params.outputs.all_changed_files, '.') }}
     permissions:
       id-token: write
     steps:
