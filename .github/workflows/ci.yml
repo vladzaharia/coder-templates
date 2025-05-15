@@ -71,51 +71,6 @@ jobs:
             echo "any_changed=${{ steps.changed-files-push.outputs.any_changed }}" >> $GITHUB_OUTPUT
           fi
 
-  deploy_all_templates:
-    needs: get_params
-    name: Deploy all templates
-    runs-on: ubuntu-latest
-    if: ${{ contains(needs.get_params.outputs.changed_files, '_modules') || contains(needs.get_params.outputs.changed_files, '.github') || contains(needs.get_params.outputs.changed_files, '.') }}
-    permissions:
-      id-token: write
-    steps:
-      - name: Checkout files
-        uses: actions/checkout@v3
-      # - name: Pull Vault secrets from Vault
-      #   uses: hashicorp/vault-action@v2
-      #   with:
-      #     url: https://vault.polaris.rest
-      #     role: coder-templates
-      #     path: github
-      #     method: jwt
-      #     # jwtGithubAudience: sigstore
-      #     secrets: |
-      #       /ci-cd/coder-templates/ci VAULT_ROLE_ID ;
-      #       /ci-cd/coder-templates/ci VAULT_SECRET_ID ;
-      #       /ci-cd/coder-templates/ci CODER_SESSION_TOKEN
-      - name: Use Just
-        uses: extractions/setup-just@v2
-      - name: Use Terraform
-        uses: hashicorp/setup-terraform@v2
-      - name: Setup Coder
-        uses: coder/setup-action@v1
-        with:
-          access_url: "https://code.polaris.rest"
-          # coder_session_token: ${{ env.CODER_SESSION_TOKEN }}
-          coder_session_token: ${{ secrets.CODER_SESSION_TOKEN }}
-      - name: Push templates
-        run: just deploy
-        env:
-          CODER_URL: https://code.polaris.rest
-          CODER_TEMPLATE_VERSION: ${{ needs.get_params.outputs.sha_short }}
-          CODER_TEMPLATE_MESSAGE: ${{ inputs.message || needs.get_params.outputs.pr_title }}
-          # VAULT_ROLE_ID: ${{ env.VAULT_ROLE_ID }}
-          VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
-          TF_VAR_vault_role_id: ${{ secrets.VAULT_ROLE_ID }}
-          # VAULT_SECRET_ID: ${{ env.VAULT_SECRET_ID }}
-          VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
-          TF_VAR_vault_secret_id: ${{ secrets.VAULT_SECRET_ID }}
-
   deploy_template:
     needs: get_params
     name: Deploy template
