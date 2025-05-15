@@ -215,9 +215,9 @@ data "aws_ami" "ubuntu" {
 }
 
 resource "coder_agent" "dev" {
-  arch        = "amd64"
-  auth        = "aws-instance-identity"
-  os          = "linux"
+  arch           = "amd64"
+  auth           = "aws-instance-identity"
+  os             = "linux"
   startup_script = <<-EOT
     set -e
 

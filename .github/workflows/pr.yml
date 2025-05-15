@@ -30,10 +30,10 @@ jobs:
         id: changed-files
         run: |
           if [[ "${{github.event_name}}" == "pull_request" ]]; then
-            echo "changed_files=${{ steps.changed-files-pr.outputs.all_changed_files }}" >> $GITHUB_OUTPUT
+            echo "all_changed_files=${{ steps.changed-files-pr.outputs.all_changed_files }}" >> $GITHUB_OUTPUT
             echo "any_changed=${{ steps.changed-files-pr.outputs.any_changed }}" >> $GITHUB_OUTPUT
           fi
-  
+
   validate_all_templates:
     needs: get_params
     name: Validate all templates
@@ -66,16 +66,16 @@ jobs:
       - name: Plan templates
         run: just plan
         env:
-            # TF_VAR_vault_role_id: ${{ env.VAULT_ROLE_ID }}
-            TF_VAR_vault_role_id: ${{ secrets.VAULT_ROLE_ID }}
-            # TF_VAR_vault_secret_id: ${{ env.VAULT_SECRET_ID }}
-            TF_VAR_vault_secret_id: ${{ secrets.VAULT_SECRET_ID }}
-  
+          # TF_VAR_vault_role_id: ${{ env.VAULT_ROLE_ID }}
+          TF_VAR_vault_role_id: ${{ secrets.VAULT_ROLE_ID }}
+          # TF_VAR_vault_secret_id: ${{ env.VAULT_SECRET_ID }}
+          TF_VAR_vault_secret_id: ${{ secrets.VAULT_SECRET_ID }}
+
   validate_template:
     needs: get_params
     name: Validate template
     runs-on: ubuntu-latest
-    if: ${{ needs.get_params.outputs.any_changed != 'false' && !contains(needs.get_params.outputs.all_changed_files, '_modules') && !contains(needs.get_params.outputs.all_changed_files, '.github') }}
+    if: ${{ needs.get_params.outputs.any_changed != 'false' && !contains(needs.get_params.outputs.all_changed_files, '_modules') && !contains(needs.get_params.outputs.all_changed_files, '.github') && !contains(needs.get_params.outputs.all_changed_files, '.') }}
     permissions:
       id-token: write
     strategy:
@@ -117,7 +117,7 @@ jobs:
         run: just plan ${{ matrix.template }}
         if: ${{ !startsWith(matrix.template, '.') }}
         env:
-            # TF_VAR_vault_role_id: ${{ env.VAULT_ROLE_ID }}
-            TF_VAR_vault_role_id: ${{ secrets.VAULT_ROLE_ID }}
-            # TF_VAR_vault_secret_id: ${{ env.VAULT_SECRET_ID }}
-            TF_VAR_vault_secret_id: ${{ secrets.VAULT_SECRET_ID }}
+          # TF_VAR_vault_role_id: ${{ env.VAULT_ROLE_ID }}
+          TF_VAR_vault_role_id: ${{ secrets.VAULT_ROLE_ID }}
+          # TF_VAR_vault_secret_id: ${{ env.VAULT_SECRET_ID }}
+          TF_VAR_vault_secret_id: ${{ secrets.VAULT_SECRET_ID }}
