@@ -15,3 +15,9 @@ variable "ask_features" {
   type        = bool
   default     = true
 }
+
+variable "ask_editors" {
+  description = "Ask user's editor choices"
+  type        = bool
+  default     = true
+}

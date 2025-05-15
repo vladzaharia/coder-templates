@@ -51,5 +51,5 @@ resource "coder_app" "github" {
   url          = "https://github.com/${var.repo != null ? var.repo : data.coder_parameter.github_repo[0].value}"
   icon         = "/icon/github.svg"
   external     = true
-  order        = 1000
+  order        = 10000
 }

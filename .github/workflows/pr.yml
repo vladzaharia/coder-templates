@@ -38,7 +38,7 @@ jobs:
             **/*.md
             LICENSE
       - name: Checkout files
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         if: steps.changed-files-pr.outputs.common_any_changed == 'true'
       - name: Get all templates
         id: get-templates
@@ -58,6 +58,41 @@ jobs:
               echo "any_changed=${{ steps.changed-files-pr.outputs.templates_any_changed }}" >> $GITHUB_OUTPUT
             fi
           fi
+  
+  fix-lint-issues:
+    permissions:
+      contents: write
+      statuses: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Lint and fix issues
+        uses: super-linter/super-linter@v7.4.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FIX_ENV: true
+          VALIDATE_GITHUB_ACTIONS: true
+          VALIDATE_GITLEAKS: true
+          VALIDATE_MARKDOWN: true
+          FIX_MARKDOWN_PRETTIER: true
+          FIX_TERRAFORM_FMT: true
+          VALIDATE_TERRAFORM_TFLINT: true
+          VALIDATE_TERRAFORM_TERRASCAN: true
+          VALIDATE_YAML: true
+          FIX_YAML_PRETTIER: true
+      - name: Commit and push linting fixes
+        if: >
+          github.event_name == 'pull_request' &&
+          github.ref_name != github.event.repository.default_branch
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          branch: ${{ github.event.pull_request.head.ref || github.head_ref || github.ref }}
+          commit_message: "chore: fix linting issues"
+          commit_user_name: super-linter
+          commit_user_email: super-linter@super-linter.dev
+
 
   validate_template:
     needs: get_params
@@ -72,13 +107,13 @@ jobs:
         template: ${{ fromJson(needs.get_params.outputs.changed_files) }}
     steps:
       - name: Checkout files
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Use Terraform
         uses: hashicorp/setup-terraform@v2
       - name: Use Just
         uses: extractions/setup-just@v2
       - name: Cache Terraform packages
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ./${{ matrix.template }}/.terraform
           key: ${{ runner.os }}-terraform-${{ hashFiles(format('./{0}/.terraform.lock.hcl', matrix.template)) }}
@@ -99,9 +134,11 @@ jobs:
         run: just init ${{ matrix.template }}
         if: ${{ !startsWith(matrix.template, '.') }}
       - name: Validate template
+        id: validate
         run: just validate ${{ matrix.template }}
         if: ${{ !startsWith(matrix.template, '.') }}
       - name: Plan template
+        id: plan
         run: just plan ${{ matrix.template }}
         if: ${{ !startsWith(matrix.template, '.') }}
         env:
@@ -109,3 +146,27 @@ jobs:
           TF_VAR_vault_role_id: ${{ secrets.VAULT_ROLE_ID }}
           # TF_VAR_vault_secret_id: ${{ env.VAULT_SECRET_ID }}
           TF_VAR_vault_secret_id: ${{ secrets.VAULT_SECRET_ID }}
+      - name: Comment PR with plan result
+        uses: robburger/terraform-pr-commenter@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          commenter_type: plan
+          commenter_input: ${{ format('{0}{1}', steps.plan.outputs.stdout, steps.plan.outputs.stderr) }}
+          commenter_exitcode: ${{ steps.plan.outputs.exitcode }}
+          
+  check_validations:
+    name: Check template validations
+    needs: validate_template
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check validation status
+        run: |
+          if [[ "${{ needs.validate_template.result }}" == "success" ]]; then
+            echo "All template validations passed successfully!"
+            exit 0
+          else
+            echo "One or more template validations failed!"
+            exit 1
+          fi
