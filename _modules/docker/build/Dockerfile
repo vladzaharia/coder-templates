@@ -19,7 +19,7 @@ RUN apt-get update \
 	wget \
 	zsh
 
-ARG DE=xfce
+ARG DE=none
 RUN if [ "${DE}" = "xfce" ]; then \
 	apt-get install -y --no-install-recommends --no-install-suggests dbus-x11 libdatetime-perl openssl ssl-cert xfce4 xfce4-goodies; \
 fi
@@ -53,19 +53,20 @@ RUN (rm -rf /run/reboot-required* /var/lib/apt/lists/*) || true
 
 # Add user
 ARG USER=coder
-RUN useradd --groups sudo --no-create-home --shell /bin/zsh ${USER}; \
-	echo '${USER} ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/${USER}; \
-	echo 'LANG=en_US.UTF-8' >> /etc/default/locale; \
-	echo 'export GNOME_SHELL_SESSION_MODE=ubuntu' > /home/${USER}/.xsessionrc; \
-	echo 'export XDG_CURRENT_DESKTOP=${DE}' >> /home/${USER}/.xsessionrc; \
-	echo 'export XDG_SESSION_TYPE=x11' >> /home/${USER}/.xsessionrc;
+RUN useradd --groups sudo --no-create-home --shell /bin/zsh ${USER} \
+	&& echo "${USER} ALL=(ALL) NOPASSWD:ALL" >/etc/sudoers.d/${USER} \
+	&& chmod 0440 /etc/sudoers.d/${USER}
 
 USER ${USER}
 WORKDIR /home/${USER}
 
+RUN echo 'export GNOME_SHELL_SESSION_MODE=ubuntu' > /home/${USER}/.xsessionrc \
+	&& echo 'export XDG_CURRENT_DESKTOP=${DE}' >> /home/${USER}/.xsessionrc \
+	&& echo 'export XDG_SESSION_TYPE=x11' >> /home/${USER}/.xsessionrc
+
 # pre-install VS Code extensions
 RUN code-server --install-extension eamodio.gitlens
-RUN code-server --install-extension ms-azuretools.vscode-containers
+#RUN code-server --install-extension ms-azuretools.vscode-containers
 RUN code-server --install-extension github.vscode-github-actions
 RUN code-server --install-extension BeardedBear.beardedtheme
 RUN code-server --install-extension EditorConfig.EditorConfig
