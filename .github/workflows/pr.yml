@@ -43,8 +43,7 @@ jobs:
         id: get-templates
         if: steps.changed-files-pr.outputs.common_any_changed == 'true'
         run: |
-          # Get all directories that don't start with underscore or dot
-          echo "folders=$(find . -maxdepth 1 -type d -not -path "*/\.*" -not -path "./_*" -not -path "." | sed 's|^\./||' | jq -R . | jq -s .)" >> $GITHUB_OUTPUT
+          echo "folders=$(tree -J -d -L 1 | jq -c '.[0].contents | map(.name) | map(select(startswith("_") | not))' | sed 's/"/\\"/g')" >> $GITHUB_OUTPUT
 
       - name: Get changed files
         id: changed-files
@@ -69,7 +68,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        template: ${{ fromJson(needs.get_params.outputs.all_changed_files) }}
+        template: ${{ fromJson(needs.get_params.outputs.changed_files) }}
     steps:
       - name: Checkout files
         uses: actions/checkout@v3
