@@ -33,6 +33,10 @@ module "claude-code" {
   experiment_use_screen   = var.multiplexer == "screen"
   experiment_use_tmux     = var.multiplexer == "tmux"
   experiment_report_tasks = true
+
+  depends_on = [module.claude-vault]
+
+  order = 30
 }
 
 module "claude-vault" {
@@ -63,6 +67,8 @@ module "goose" {
   experiment_goose_model    = module.goose-vault.data["GOOSE_MODEL"]
 
   depends_on = [module.goose-vault]
+
+  order = 35
 }
 
 module "goose-vault" {

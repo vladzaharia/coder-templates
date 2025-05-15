@@ -52,7 +52,7 @@ module "jetbrains_gateway" {
   version        = ">= 1.0.0"
   count          = var.jetbrains.enabled && var.jetbrains.default != "FL" ? 1 : 0
   agent_id       = var.agent_id
-  jetbrains_ides = var.jetbrains.products
+  jetbrains_ides = setsubtract(var.jetbrains.products, ["FL"])
   default        = var.jetbrains.default
   latest         = true
   folder         = var.path
@@ -61,7 +61,7 @@ module "jetbrains_gateway" {
 
 resource "coder_app" "fleet" {
   agent_id     = var.agent_id
-  count        = var.jetbrains.enabled && contains(var.jetbrains.products, "FL") ? 1 : 0
+  count        = var.jetbrains.enabled && var.jetbrains.default == "FL" ? 1 : 0
   slug         = "fleet"
   display_name = "Jetbrains Fleet"
   url          = "fleet://fleet.ssh/coder.${data.coder_workspace.main.name}?pwd=${var.path}"
