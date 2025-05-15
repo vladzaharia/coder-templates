@@ -130,7 +130,8 @@ jobs:
       #       /ci-cd/coder-templates/ci VAULT_ROLE_ID ;
       #       /ci-cd/coder-templates/ci VAULT_SECRET_ID ;
       #       /ci-cd/coder-templates/ci CODER_SESSION_TOKEN
-  
+      - name: Use Just
+        uses: extractions/setup-just@v2
       - name: Setup Coder
         uses: coder/setup-action@v1
         with:
