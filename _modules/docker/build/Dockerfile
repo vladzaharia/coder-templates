@@ -30,6 +30,9 @@ RUN curl -O https://starship.rs/install.sh && chmod +x install.sh && ./install.s
 # Install just
 RUN curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
 
+# Install tilt
+RUN curl -fsSL https://raw.githubusercontent.com/tilt-dev/tilt/master/scripts/install.sh | bash
+
 # Install Nodejs for Claude Code
 RUN (curl -fsSL https://deb.nodesource.com/setup_23.x | sh) && apt-get install -y nodejs && chmod -R 777 /usr/bin /usr/lib/node_modules
 
@@ -56,13 +59,15 @@ ARG USER=coder
 RUN useradd --groups sudo --no-create-home --shell /bin/zsh ${USER} \
 	&& echo "${USER} ALL=(ALL) NOPASSWD:ALL" >/etc/sudoers.d/${USER} \
 	&& chmod 0440 /etc/sudoers.d/${USER}
+	
+RUN mkdir -p /home/${USER} && chown ${USER}:${USER} /home/${USER} && chmod -R 777 /home/${USER}
 
 USER ${USER}
 WORKDIR /home/${USER}
 
-RUN echo 'export GNOME_SHELL_SESSION_MODE=ubuntu' > /home/${USER}/.xsessionrc \
-	&& echo 'export XDG_CURRENT_DESKTOP=${DE}' >> /home/${USER}/.xsessionrc \
-	&& echo 'export XDG_SESSION_TYPE=x11' >> /home/${USER}/.xsessionrc
+# RUN echo 'export GNOME_SHELL_SESSION_MODE=ubuntu' > /home/${USER}/.xsessionrc \
+# 	&& echo 'export XDG_CURRENT_DESKTOP=${DE}' >> /home/${USER}/.xsessionrc \
+# 	&& echo 'export XDG_SESSION_TYPE=x11' >> /home/${USER}/.xsessionrc
 
 # pre-install VS Code extensions
 RUN code-server --install-extension eamodio.gitlens
