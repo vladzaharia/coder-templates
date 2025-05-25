@@ -11,6 +11,13 @@ data "coder_external_auth" "github" {
   count = var.github.enabled ? 1 : 0
 }
 
+resource "coder_env" "github_token" {
+  count = var.github.enabled ? 1 : 0
+  agent_id = var.agent_id
+  name     = "GITHUB_TOKEN"
+  value    = data.coder_external_auth.github[0].access_token
+}
+
 data "coder_parameter" "github_repo" {
   count        = var.github.enabled ? 1 : 0
   order        = 100
