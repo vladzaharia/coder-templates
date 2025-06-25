@@ -72,7 +72,7 @@ deploy template=DEFAULT: (_cp-modules template)
 
 # Setup modules in template(s) using `ln -s`
 [private]
-_ln-modules template=DEFAULT: (_rm-modules template) (_run-no-modules template 'ln -s -T ../_modules ./_modules') (_run-no-modules template 'ln -s -T ../_modules/docker/build ./build')
+_ln-modules template=DEFAULT: (_rm-modules template) (_run-no-modules template 'ln -s ../_modules ./_modules') (_run-no-modules template 'ln -s ../_modules/docker/build ./build')
 
 # Setup modules in template(s) using `cp -R`
 [private]
