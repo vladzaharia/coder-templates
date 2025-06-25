@@ -1,0 +1,10 @@
+self-hosted-runner:
+  labels: []
+
+config-variables:
+  - VAULT_ROLE_ID
+  - VAULT_SECRET_ID
+
+paths:
+ .github/workflows/**/*.yml:
+   ignore: []
