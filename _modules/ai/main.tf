@@ -51,6 +51,13 @@ data "coder_parameter" "ai_prompt" {
   mutable     = true
 }
 
+# resource "coder_ai_task" "ai" {
+#   count = local.claude_enabled || local.goose_enabled ? 1 : 0
+#   sidebar_app = {
+#     id = local.claude_enabled ? resource.coder_app.claude_code.id : resource.coder_app.goose.id
+#   }
+# }
+
 module "claude-code" {
   source   = "registry.coder.com/modules/claude-code/coder"
   version  = ">= 1.0.0"
@@ -61,9 +68,12 @@ module "claude-code" {
   install_claude_code = true
   claude_code_version = "latest"
 
+  # Enable tmux with session persistence
   experiment_use_screen   = var.multiplexer == "screen"
   experiment_use_tmux     = var.multiplexer == "tmux"
-  experiment_report_tasks = true
+  experiment_tmux_session_persistence   = var.multiplexer == "tmux"
+  experiment_tmux_session_save_interval = "10"
+  experiment_report_tasks               = true
 
   depends_on = [module.claude-vault]
 
@@ -96,6 +106,22 @@ module "goose" {
   experiment_auto_configure = true
   experiment_goose_provider = module.goose-vault.data["GOOSE_PROVIDER"]
   experiment_goose_model    = module.goose-vault.data["GOOSE_MODEL"]
+
+  experiment_pre_install_script = <<-EOT
+  npm i -g @wonderwhy-er/desktop-commander@latest
+  EOT
+
+  experiment_additional_extensions = <<-EOT
+  desktop-commander:
+    args: []
+    cmd: desktop-commander
+    description: Ideal for background tasks
+    enabled: true
+    envs: {}
+    name: desktop-commander
+    timeout: 300
+    type: stdio
+  EOT
 
   depends_on = [module.goose-vault]
 
